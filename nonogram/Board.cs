@@ -4,20 +4,20 @@
 
 namespace Nonogram
 {
-    class Board
+    public class Board
     {
         // Constant Declarations
 
         private const int k_board_start_offset = 50;
         private const int k_cell_size = 100;
 
-        private readonly Pen k_exterior_pen = new Pen(Color.Black, 8);
-        private readonly Pen k_interior_pen = new Pen(Color.DarkGray, 4);
+        private static readonly Pen k_exterior_pen = new Pen(Color.Black, 8);
+        private static readonly Pen k_interior_pen = new Pen(Color.DarkGray, 4);
 
-        private readonly Brush k_cell_on_brush = new SolidBrush(Color.Black);
-        private readonly Pen k_cell_off_pen = new Pen(Color.Black, 16);
+        private static readonly Brush k_cell_on_brush = new SolidBrush(Color.Black);
+        private static readonly Pen k_cell_off_pen = new Pen(Color.Black, 16);
 
-        private readonly int k_cell_off_offset = k_board_start_offset * 3 / 4;
+        private static readonly int k_cell_off_offset = k_board_start_offset * 3 / 4;
 
         // Private type definitions
 
@@ -28,11 +28,17 @@ namespace Nonogram
             on,
         }
 
-        private struct Cell
+        private class Cell
         {
             public Cell_State State;
 
-            public Rectangle Screen_Rectangle;
+            public readonly Rectangle Screen_Rectangle;
+
+            public Cell(Cell_State initial_state, Rectangle screen_rectangle)
+            {
+                State = initial_state;
+                Screen_Rectangle = screen_rectangle;
+            }
         }
 
         // Private data members
@@ -43,6 +49,7 @@ namespace Nonogram
         private readonly Rectangle m_exterior_rectangle;
 
         private Cell[,] m_cells;
+        private Cell_State[,] m_solution;
 
         // Public methods
 
@@ -63,14 +70,49 @@ namespace Nonogram
             {
                 for (int x = 0; x < m_cells.GetLength(0); x++)
                 {
-                    m_cells[x, y].State = Cell_State.maybe;
-
-                    m_cells[x, y].Screen_Rectangle = new Rectangle(
-                        m_exterior_rectangle.Left + k_cell_size * x,
-                        m_exterior_rectangle.Top + k_cell_size * y,
-                        k_cell_size, k_cell_size);
+                    m_cells[x, y] = new Cell(
+                        Cell_State.maybe,
+                        new Rectangle(
+                            m_exterior_rectangle.Left + k_cell_size * x,
+                            m_exterior_rectangle.Top + k_cell_size * y,
+                            k_cell_size, k_cell_size));
                 }
             }
+
+            // Initialize the solution
+
+            m_solution = new Cell_State[columns, rows];
+
+            for (int y = 0; y < m_solution.GetLength(1); y++)
+            {
+                for (int x = 0; x < m_solution.GetLength(0); x++)
+                {
+                    m_solution[x, y] = Cell_State.off;
+                }
+            }
+
+            // TODO not a hardcoded solution maybe?
+
+            m_solution[0, 1] = Cell_State.on;
+            m_solution[0, 2] = Cell_State.on;
+
+            m_solution[1, 0] = Cell_State.on;
+            m_solution[1, 1] = Cell_State.on;
+            m_solution[1, 2] = Cell_State.on;
+            m_solution[1, 3] = Cell_State.on;
+
+            m_solution[2, 1] = Cell_State.on;
+            m_solution[2, 2] = Cell_State.on;
+            m_solution[2, 3] = Cell_State.on;
+            m_solution[2, 4] = Cell_State.on;
+
+            m_solution[3, 0] = Cell_State.on;
+            m_solution[3, 1] = Cell_State.on;
+            m_solution[3, 2] = Cell_State.on;
+            m_solution[3, 3] = Cell_State.on;
+
+            m_solution[4, 1] = Cell_State.on;
+            m_solution[4, 2] = Cell_State.on;
         }
 
         public void Draw(Graphics g)
@@ -136,7 +178,7 @@ namespace Nonogram
             g.DrawRectangle(k_exterior_pen, m_exterior_rectangle);
         }
 
-        public bool OnClick(Point click_location)
+        public bool Check_Click(Point click_location)
         {
             for (int x = 0; x < m_cells.GetLength(0); x++)
             {
@@ -165,6 +207,61 @@ namespace Nonogram
             }
 
             return false;
+        }
+
+        private bool Process_Group(Cell[] cells)
+        {
+            // TODO, do the thing: build list of all possibilities, then delete all the 'maybe's you can.
+
+            if (cells[0].State != Cell_State.on)
+            {
+                // 'hello world' that Process_Group can do something.
+                cells[0].State = Cell_State.on;
+
+                return true;
+            }
+
+            return false;
+        }
+
+        public void Give_Hint()
+        {
+            // Check over each row and each column to see if any of them can add something
+
+            for (int x = 0; x < m_cells.GetLength(0); x++)
+            {
+                Cell[] cells = new Cell[m_cells.GetLength(1)];
+
+                for (int y = 0; y < m_cells.GetLength(1); y++)
+                {
+                    cells[y] = m_cells[x, y];
+                }
+
+                if (Process_Group(cells))
+                {
+                    return;
+                }
+            }
+
+            for (int y = 0; y < m_cells.GetLength(1); y++)
+            {
+                Cell[] cells = new Cell[m_cells.GetLength(0)];
+
+                for (int x = 0; x < m_cells.GetLength(0); x++)
+                {
+                    cells[x] = m_cells[x, y];
+                }
+
+                if (Process_Group(cells))
+                {
+                    return;
+                }
+            }
+        }
+
+        public void Undo()
+        {
+            // TODO
         }
     }
 }
