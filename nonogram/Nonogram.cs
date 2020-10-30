@@ -22,18 +22,19 @@ namespace Nonogram
 
             m_hint_button = new Hint_Button(
                 m_board,
-                new Point(600, 50)); // TODO again, global layout stuffs
+                new Point(800, 250)); // TODO again, global layout stuffs
 
             m_undo_button = new Undo_Button(
                 m_board,
-                new Point(600, 450)); // TODO again, global layout stuffs
+                new Point(800, 650)); // TODO again, global layout stuffs
         }
 
         private void InitializeComponent()
         {
             this.m_components = new Container();
             this.AutoScaleMode = AutoScaleMode.Font;
-            this.ClientSize = new Size(750, 600); // TODO size based on the board
+            // this.ClientSize = new Size(750, 600); // TODO size based on the board
+            this.ClientSize = new Size(950, 800); // TODO size based on the board
             this.Text = "Nonogram";
         }
 
