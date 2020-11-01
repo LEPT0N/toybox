@@ -1,7 +1,6 @@
-﻿using Nonogram;
-using System.Drawing;
+﻿using System.Drawing;
 
-namespace nonogram
+namespace Nonogram
 {
     public abstract class Base_Button
     {
