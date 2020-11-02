@@ -1,4 +1,5 @@
-﻿using System.Drawing;
+﻿using System.Collections.Generic;
+using System.Drawing;
 
 // TODO separate logic from visual
 
@@ -398,76 +399,170 @@ namespace Nonogram
             return false;
         }
 
+        private Cell_State[] Convert_Permutation_To_Possibility(
+            int[] group_sizes,
+            int[] permutation)
+        {
+            int group_index = 0;
+            List<Cell_State> result = new List<Cell_State>();
+
+            for (int i = 0; i < permutation.Length; i++)
+            {
+                if (permutation[i] == 0)
+                {
+                    result.Add(Cell_State.off);
+                }
+                else
+                {
+                    if (group_index > 0)
+                    {
+                        result.Add(Cell_State.off);
+                    }
+
+                    for (int j = 0; j < group_sizes[group_index]; j++)
+                    {
+                        result.Add(Cell_State.on);
+                    }
+
+                    group_index++;
+                }
+            }
+
+            return result.ToArray();
+        }
+
+        private bool Is_Valid_Possibility(Cell_State[] possibility, Cell[] cells)
+        {
+            for (int i = 0; i < cells.Length; i++)
+            {
+                if (cells[i].State != Cell_State.maybe)
+                {
+                    if (cells[i].State != possibility[i])
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
         private bool Process_Group(Group group)
         {
-            // TODO, do the thing
+            // Count how many 'on' sections and 'off' sections we have in this group.
 
-            /*
-             * 1. Build list of all possibilities
-             * 
-             *  collect the cells into sections:
-             *      Say hint is '2 3' in a 10x10 grid
-             *      Sections would be:
-             *          1 instance of: 'on,on'
-             *          1 instance of: 'off,on,on,on'
-             *          4 instances of: 'off'
-             *      So the question now comes down to where to put the 4 free-floating 'off's
-             *      
-             *      to represent this specific case, we're going to try to solve:
-             *      
-             *          list all permutations of '110000'
-             *              1 = is one of the sections with an 'on'
-             *                  These are all the same for the purposes of permutations
-             *                  because we know their order already from the hints.
-             *              0 = one of the 'off' sections 
-             *                  These are all the same because they're identical.
-             *      
-             *      So now we just need to list through the permutations of '110000'
-             *          Ex: 000011, 000101, 000110, 001001, 001010, 001100, 010001, etc
-             *      In C++, std::next_permutation does this!
-             *          https://helloacm.com/the-next-permutation-algorithm-in-c-stdnext_permutation/
-             *          https://stackoverflow.com/questions/11483060/stdnext-permutation-implementation-explanation
-             * 
-             *      So implement that, and then transform back from the numbers to the final.
-             *          Ex:
-             *              We have a permutations: 000101
-             *              Converted back to the sections: ['off', 'off', 'off', 'on,on', 'off', 'off,on,on,on']
-             *              Final: off,off,off,on,on,off,off,on,on,on
-             * 
-             *
-             * 2. Throw out permutations that are impossible based on the current state of the board.
-             *      ex: permutation is 'off, on, on, off', but board is 'maybe, maybe, maybe, on'
-             *          These permutation isn't possible since the board has 'on' in the last spot.
-             * 
-             * 3. Loop through remaining permutations to compute their 'union'
-             *      ex: if the two permutations were:
-             *           'off, on, on, off'
-             *           'off, off, on, on'
-             *      The union is:
-             *           'off, maybe, on, maybe'
-             *      
-             * 4. Any non-maybes in the 'union' get set into the board's cells.
-             */
+            int total_cell_count = group.Cells.Length;
+            int on_section_count = group.Group_Clue.Group_Sizes.Length;
+            int off_section_count = total_cell_count;
+            int total_section_count;
 
-            // 'hello world' that gives a 'the entire group is filled' hint.
-            if (group.Group_Clue.Group_Sizes[0] == group.Cells.Length)
             {
-                bool changed_something = false;
-
-                for (int cell_index = 0; cell_index < group.Cells.Length; cell_index++)
+                for (int i = 0; i < on_section_count; i++)
                 {
-                    if (group.Cells[cell_index].State != Cell_State.on)
-                    {
-                        group.Cells[cell_index].State = Cell_State.on;
+                    off_section_count -= group.Group_Clue.Group_Sizes[i];
 
-                        changed_something = true;
+                    if (i > 0)
+                    {
+                        off_section_count -= 1;
                     }
                 }
 
-                return changed_something;
+                total_section_count = on_section_count + off_section_count;
             }
 
-            return false;
+            // Build the list of possible permutations
+
+            List<int[]> permutations = new List<int[]>();
+
+            {
+                int[] permutation = new int[total_section_count];
+                for (int i = 0; i < permutation.Length; i++)
+                {
+                    permutation[i] = (i < off_section_count ? 0 : 1);
+                }
+
+                do
+                {
+                    permutations.Add(permutation.Copy());
+                } while (permutation.Get_Next_Permutation());
+            }
+
+            // convert each permutation back to a possibile solution for the group
+
+            List<Cell_State[]> possibilities = new List<Cell_State[]>();
+
+            {
+                foreach (int[] permutation in permutations)
+                {
+                    Cell_State[] possibility = Convert_Permutation_To_Possibility(
+                        group.Group_Clue.Group_Sizes,
+                        permutation);
+
+                    // But only count possibilities that are valid given the current group state.
+
+                    if (Is_Valid_Possibility(possibility, group.Cells))
+                    {
+                        possibilities.Add(possibility);
+                    }
+                }
+            }
+
+            // Compute the union of all valid possibilities
+
+            Cell_State[] union_of_possibilities = new Cell_State[total_cell_count];
+            {
+                for (int cell_index = 0; cell_index < total_cell_count; cell_index++)
+                {
+                    union_of_possibilities[cell_index] = Cell_State.maybe;
+
+                    bool cell_can_possibly_be_on = false;
+                    bool cell_can_possibly_be_off = false;
+
+                    foreach (Cell_State[] possibility in possibilities)
+                    {
+                        switch (possibility[cell_index])
+                        {
+                            case Cell_State.on:
+                                cell_can_possibly_be_on = true;
+                                break;
+
+                            case Cell_State.off:
+                                cell_can_possibly_be_off = true;
+                                break;
+                        }
+                    }
+
+                    if (cell_can_possibly_be_on && !cell_can_possibly_be_off)
+                    {
+                        union_of_possibilities[cell_index] = Cell_State.on;
+                    }
+                    else if (cell_can_possibly_be_off && !cell_can_possibly_be_on)
+                    {
+                        union_of_possibilities[cell_index] = Cell_State.off;
+                    }
+                    else
+                    {
+                        union_of_possibilities[cell_index] = Cell_State.maybe;
+                    }
+                }
+            }
+
+            // See if we can change anything in the group with our newfound knowledge
+
+            bool changed_something = false;
+
+            for (int cell_index = 0; cell_index < total_cell_count; cell_index++)
+            {
+                if (union_of_possibilities[cell_index] != Cell_State.maybe &&
+                    union_of_possibilities[cell_index] != group.Cells[cell_index].State)
+                {
+                    group.Cells[cell_index].State = union_of_possibilities[cell_index];
+
+                    changed_something = true;
+                }
+            }
+
+            return changed_something;
         }
 
         public void Give_Hint()

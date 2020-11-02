@@ -7,7 +7,7 @@ namespace Nonogram
     public static class Test
     {
         // x!
-        public static long Factorial(this int x)
+        private static long Factorial(this int x)
         {
             Debug.Assert(x >= 0);
 
@@ -127,7 +127,7 @@ namespace Nonogram
                         list[i] = i < count_of_1s ? 1 : 2;
                     }
 
-                    // We expect to find 'list_length! / (count_of_1s! * count_of_0s!)' permutations
+                    // We expect to find 'list_length! / (count_of_1s! * count_of_2s!)' permutations
                     long permutation_count = Validate_Get_Next_Permutation_For_List(list);
                     long expected_permutation_count = list_length.Factorial() / (count_of_1s.Factorial() * (list_length - count_of_1s).Factorial());
                     Debug.Assert(permutation_count == expected_permutation_count);

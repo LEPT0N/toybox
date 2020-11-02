@@ -26,6 +26,18 @@ namespace Nonogram
             }
         }
 
+        public static T[] Copy<T>(this T[] list)
+        {
+            T[] result = new T[list.Length];
+
+            for (int i = 0; i < list.Length; i++)
+            {
+                result[i] = list[i];
+            }
+
+            return result;
+        }
+
         // If there is another possible permutation, return 'true' and edit the input to be the next permutation
         // Written by me after understanding this explanation of std:next_permutation:
         //      https://stackoverflow.com/questions/11483060/stdnext-permutation-implementation-explanation
