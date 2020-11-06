@@ -7,6 +7,8 @@ namespace Nonogram
 {
     public class Nonogram : Form
     {
+        private const int k_window_padding = 25;
+
         private IContainer m_components = null;
 
         private Board m_board;
@@ -15,25 +17,31 @@ namespace Nonogram
 
         public Nonogram()
         {
-            InitializeComponent();
+            Size board_size = Board.Get_Size(20, 20);
 
-            m_board = new Board(5, 5);
+            m_board = new Board(
+                20, 20,
+                new Point(k_window_padding,  k_window_padding));
+
+            Size window_size = new Size(
+                board_size.Width + k_window_padding * 2 + 150, // TODO: based on button sizes
+                board_size.Height + k_window_padding * 2);
 
             m_hint_button = new Hint_Button(
                 m_board,
-                new Point(800, 250)); // TODO again, global layout stuffs
+                new Point(
+                    window_size.Width - k_window_padding - 100, // TODO: based on button sizes
+                    k_window_padding));
 
             m_undo_button = new Undo_Button(
                 m_board,
-                new Point(800, 650)); // TODO again, global layout stuffs
-        }
+                new Point(
+                    window_size.Width - k_window_padding - 100, // TODO: based on button sizes
+                    window_size.Height - k_window_padding - 100)); // TODO: based on button sizes
 
-        private void InitializeComponent()
-        {
             this.m_components = new Container();
             this.AutoScaleMode = AutoScaleMode.Font;
-            // this.ClientSize = new Size(750, 600); // TODO size based on the board
-            this.ClientSize = new Size(950, 800); // TODO size based on the board
+            this.ClientSize = window_size;
             this.Text = "Nonogram";
         }
 

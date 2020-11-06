@@ -1,33 +1,52 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 
 // TODO separate logic from visual
 
 // TODO just use Bungie naming conventions
 
+// TODO split Board>Board_State, Board_Visual, (and Cell, and Clue) then have Board { Board_Visual Visual, Board_State State}
+
 namespace Nonogram
 {
     public class Board
     {
-        // Constant Declarations
-
-        private const int k_board_start_offset = 250;
-        private const int k_cell_size = 100;
-
-        private static readonly Pen k_exterior_pen = new Pen(Color.Black, 8);
-        private static readonly Pen k_interior_pen = new Pen(Color.DarkGray, 4);
-
-        private static readonly Brush k_cell_on_brush = new SolidBrush(Color.Black);
-        private static readonly Pen k_cell_off_pen = new Pen(Color.Black, 16);
-
-        private static readonly int k_cell_off_offset = k_cell_size * 3 / 8;
-
-        private static readonly Font k_font_brush = new Font(FontFamily.GenericMonospace, 24);
-        private static readonly Brush k_clue_brush = new SolidBrush(Color.Black);
-        private static readonly StringFormat k_clue_format = new StringFormat();
-        private const int k_clue_spacing = 30;
-
         // Private type definitions
+
+        private struct Board_Blueprint
+        {
+            public int Cell_Size;
+
+            public Pen Exterior_Pen;
+            public Pen Interior_Pen;
+
+            public Brush Cell_On_Brush;
+            public Pen Cell_Off_Pen;
+
+            public int Cell_Off_Size { get => Cell_Size * 3 / 8; }
+
+            public Font Clue_Font;
+            public static readonly StringFormat Clue_Format;
+            public Brush Clue_Brush;
+            public int Clue_Spacing;
+            public int Clue_Board_Offset;
+
+            static Board_Blueprint()
+            {
+                Clue_Format = new StringFormat();
+                Clue_Format.Alignment = StringAlignment.Center;
+                Clue_Format.LineAlignment = StringAlignment.Center;
+            }
+        }
+
+        private enum Board_Blueprint_Type
+        {
+            Small = 0,
+            Medium = 1,
+            Large = 2,
+            Huge = 3,
+        }
 
         private enum Cell_State
         {
@@ -42,10 +61,61 @@ namespace Nonogram
 
             public readonly Rectangle Screen_Rectangle;
 
-            public Cell(Cell_State initial_state, Rectangle screen_rectangle)
+            private readonly Board_Blueprint Blueprint;
+
+            private readonly Line_Segment[] Off_Lines;
+
+            public Cell(Cell_State initial_state, Board_Blueprint blueprint, Rectangle screen_rectangle)
             {
                 State = initial_state;
                 Screen_Rectangle = screen_rectangle;
+
+                Blueprint = blueprint;
+
+                int off_left = Screen_Rectangle.X + blueprint.Cell_Size / 2 - blueprint.Cell_Off_Size;
+                int off_right = Screen_Rectangle.X + blueprint.Cell_Size / 2 + blueprint.Cell_Off_Size;
+                int off_top = Screen_Rectangle.Y + blueprint.Cell_Size / 2 - blueprint.Cell_Off_Size;
+                int off_bottom = Screen_Rectangle.Y + blueprint.Cell_Size / 2 + blueprint.Cell_Off_Size;
+
+                Off_Lines = new Line_Segment[]
+                {
+                    new Line_Segment
+                    {
+                        First = new Point(off_left, off_top),
+                        Second = new Point(off_right, off_bottom),
+                    },
+                    new Line_Segment
+                    {
+                        First = new Point(off_right, off_top),
+                        Second = new Point(off_left, off_bottom),
+                    },
+                };
+            }
+
+            public bool Contains(Point point)
+            {
+                return Screen_Rectangle.Contains(point);
+            }
+
+            public void Draw(Graphics g)
+            {
+                switch (State)
+                {
+                    // on == filled in square
+                    case Cell_State.on:
+                        {
+                            g.FillRectangle(Blueprint.Cell_On_Brush, Screen_Rectangle);
+                        }
+                        break;
+
+                    // off == X
+                    case Cell_State.off:
+                        {
+                            g.DrawLine(Blueprint.Cell_Off_Pen, Off_Lines[0].First, Off_Lines[0].Second);
+                            g.DrawLine(Blueprint.Cell_Off_Pen, Off_Lines[1].First, Off_Lines[1].Second);
+                        }
+                        break;
+                }
             }
         }
 
@@ -53,7 +123,11 @@ namespace Nonogram
         {
             public readonly int[] Group_Sizes;
 
-            public Clue(Cell_State[] states)
+            private readonly Board_Blueprint Blueprint;
+
+            private readonly Point[] Group_Positions;
+
+            public Clue(Cell_State[] states, Board_Blueprint blueprint, Point start_point, bool draw_groups_vertically)
             {
                 // Initialize our temp group list to 0s
 
@@ -106,6 +180,50 @@ namespace Nonogram
                 {
                     Group_Sizes[i] = temp_group_sizes[i];
                 }
+
+                // Record data for Draw
+
+                Blueprint = blueprint;
+
+                Group_Positions = new Point[total_group_count];
+
+                if (draw_groups_vertically)
+                {
+                    start_point.Y -= Blueprint.Clue_Spacing * total_group_count;
+                }
+                else
+                {
+                    start_point.X -= Blueprint.Clue_Spacing * total_group_count;
+                }
+
+                for (int i = 0; i < total_group_count; i++)
+                {
+                    Group_Positions[i] = start_point;
+
+                    if (draw_groups_vertically)
+                    {
+                        start_point.Y += Blueprint.Clue_Spacing;
+                    }
+                    else
+                    {
+                        start_point.X += Blueprint.Clue_Spacing;
+                    }
+                }
+            }
+
+            public void Draw(Graphics g)
+            {
+                for (int i = 0; i < Group_Sizes.Length; i++)
+                {
+                    string group_size_string = Group_Sizes[i].ToString();
+
+                    g.DrawString(
+                        group_size_string,
+                        Blueprint.Clue_Font,
+                        Blueprint.Clue_Brush,
+                        Group_Positions[i],
+                        Board_Blueprint.Clue_Format);
+                }
             }
         }
 
@@ -123,12 +241,70 @@ namespace Nonogram
             }
         }
 
+        // Constant Declarations
+
+        private static readonly Board_Blueprint[] k_board_blueprints =
+        {
+            new Board_Blueprint // to work perfectly, the sizes here need to be a multiple of 12
+            {
+                Cell_Size = 108,
+                Exterior_Pen = new Pen(Color.Black, 8),
+                Interior_Pen = new Pen(Color.DarkGray, 4),
+                Cell_On_Brush = new SolidBrush(Color.Black),
+                Cell_Off_Pen = new Pen(Color.Black, 16),
+                Clue_Font = new Font(FontFamily.GenericMonospace, 24),
+                Clue_Brush = new SolidBrush(Color.Black),
+                Clue_Spacing = 30,
+                Clue_Board_Offset = 50,
+            },
+            new Board_Blueprint // /2
+            {
+                Cell_Size = 54,
+                Exterior_Pen = new Pen(Color.Black, 4),
+                Interior_Pen = new Pen(Color.DarkGray, 2),
+                Cell_On_Brush = new SolidBrush(Color.Black),
+                Cell_Off_Pen = new Pen(Color.Black, 8),
+                Clue_Font = new Font(FontFamily.GenericMonospace, 12),
+                Clue_Brush = new SolidBrush(Color.Black),
+                Clue_Spacing = 15,
+                Clue_Board_Offset = 25,
+            },
+            new Board_Blueprint // /3
+            {
+                Cell_Size = 36,
+                Exterior_Pen = new Pen(Color.Black, 3),
+                Interior_Pen = new Pen(Color.DarkGray, 1),
+                Cell_On_Brush = new SolidBrush(Color.Black),
+                Cell_Off_Pen = new Pen(Color.Black, 6),
+                Clue_Font = new Font(FontFamily.GenericMonospace, 8),
+                Clue_Brush = new SolidBrush(Color.Black),
+                Clue_Spacing = 10,
+                Clue_Board_Offset = 18,
+            },
+            new Board_Blueprint // /4
+            {
+                Cell_Size = 27,
+                Exterior_Pen = new Pen(Color.Black, 2),
+                Interior_Pen = new Pen(Color.DarkGray, 1),
+                Cell_On_Brush = new SolidBrush(Color.Black),
+                Cell_Off_Pen = new Pen(Color.Black, 4),
+                Clue_Font = new Font(FontFamily.GenericMonospace, 6),
+                Clue_Brush = new SolidBrush(Color.Black),
+                Clue_Spacing = 8,
+                Clue_Board_Offset = 12,
+            },
+        };
+
         // Private data members
 
         private readonly int m_rows;
         private readonly int m_columns;
 
+        private readonly Board_Blueprint m_blueprint;
+
         private readonly Rectangle m_exterior_rectangle;
+
+        private readonly Line_Segment[] m_interior_lines;
 
         // TODO work out what's readonly and what's not. is the lifetime of Boad a single puzzle?
         private Cell[,] m_cells;
@@ -139,14 +315,47 @@ namespace Nonogram
 
         // Public methods
 
-        public Board(int rows, int columns)
+        public Board(int rows, int columns, Point start_point)
         {
             m_rows = rows;
             m_columns = columns;
 
+            m_blueprint = Get_Blueprint(rows, columns);
+
+            // Initialize the Board's background
+
             m_exterior_rectangle = new Rectangle(
-                new Point(k_board_start_offset, k_board_start_offset),
-                new Size(columns * k_cell_size, rows * k_cell_size));
+                new Point(
+                    start_point.X + m_blueprint.Clue_Spacing * 4,
+                    start_point.Y + m_blueprint.Clue_Spacing * 4),
+                new Size(
+                    columns * m_blueprint.Cell_Size,
+                    rows * m_blueprint.Cell_Size));
+
+            m_interior_lines = new Line_Segment[rows - 1 + columns - 1];
+            int line_segment_index = 0;
+
+            for (int column = 1; column < m_columns; column++, line_segment_index++)
+            {
+                int x_position = m_exterior_rectangle.Left + m_blueprint.Cell_Size * column;
+
+                m_interior_lines[line_segment_index] = new Line_Segment
+                {
+                    First = new Point(x_position, m_exterior_rectangle.Top),
+                    Second = new Point(x_position, m_exterior_rectangle.Bottom),
+                };
+            }
+
+            for (int row = 1; row < m_columns; row++, line_segment_index++)
+            {
+                int y_position = m_exterior_rectangle.Top + m_blueprint.Cell_Size * row;
+
+                m_interior_lines[line_segment_index] = new Line_Segment
+                {
+                    First = new Point(m_exterior_rectangle.Left, y_position),
+                    Second = new Point(m_exterior_rectangle.Right, y_position),
+                };
+            }
 
             // Initialize the grid of cells
 
@@ -158,10 +367,11 @@ namespace Nonogram
                 {
                     m_cells[column, row] = new Cell(
                         Cell_State.maybe,
+                        m_blueprint,
                         new Rectangle(
-                            m_exterior_rectangle.Left + k_cell_size * column,
-                            m_exterior_rectangle.Top + k_cell_size * row,
-                            k_cell_size, k_cell_size));
+                            m_exterior_rectangle.Left + m_blueprint.Cell_Size * column,
+                            m_exterior_rectangle.Top + m_blueprint.Cell_Size * row,
+                            m_blueprint.Cell_Size, m_blueprint.Cell_Size));
                 }
             }
 
@@ -177,7 +387,7 @@ namespace Nonogram
                 }
             }
 
-            // TODO not a hardcoded solution maybe?
+            // TODO not a hardcoded solution maybe? naaaaaaaah
 
             m_solution[0, 1] = Cell_State.on;
             m_solution[0, 2] = Cell_State.on;
@@ -202,9 +412,6 @@ namespace Nonogram
 
             // Generate the clues
 
-            k_clue_format.Alignment = StringAlignment.Center;
-            k_clue_format.LineAlignment = StringAlignment.Center;
-
             m_column_clues = new Clue[columns];
 
             for (int column = 0; column < columns; column++)
@@ -216,7 +423,11 @@ namespace Nonogram
                     solution_states[row] = m_solution[column, row];
                 }
 
-                m_column_clues[column] = new Clue(solution_states);
+                Point clue_position = m_cells[column, 0].Screen_Rectangle.Location;
+                clue_position.X += m_blueprint.Cell_Size / 2;
+                clue_position.Y += m_blueprint.Cell_Size / 2 - m_blueprint.Clue_Board_Offset;
+
+                m_column_clues[column] = new Clue(solution_states, m_blueprint, clue_position, true);
             }
 
             m_row_clues = new Clue[rows];
@@ -230,7 +441,11 @@ namespace Nonogram
                     solution_states[column] = m_solution[column, row];
                 }
 
-                m_row_clues[row] = new Clue(solution_states);
+                Point clue_position = m_cells[0, row].Screen_Rectangle.Location;
+                clue_position.X += m_blueprint.Cell_Size / 2 - m_blueprint.Clue_Board_Offset;
+                clue_position.Y += m_blueprint.Cell_Size / 2;
+
+                m_row_clues[row] = new Clue(solution_states, m_blueprint, clue_position, false);
             }
 
             // Collect the cells into groups
@@ -263,6 +478,37 @@ namespace Nonogram
             }
         }
 
+        private static Board_Blueprint Get_Blueprint(int rows, int columns)
+        {
+            int largest_side = Math.Max(rows, columns);
+
+            if (largest_side <= 5)
+            {
+                return k_board_blueprints[(int)Board_Blueprint_Type.Small];
+            }
+            else if (largest_side <= 10)
+            {
+                return k_board_blueprints[(int)Board_Blueprint_Type.Medium];
+            }
+            else if (largest_side <= 15)
+            {
+                return k_board_blueprints[(int)Board_Blueprint_Type.Large];
+            }
+            else
+            {
+                return k_board_blueprints[(int)Board_Blueprint_Type.Huge];
+            }
+        }
+
+        public static Size Get_Size(int rows, int columns)
+        {
+            Board_Blueprint blueprint = Get_Blueprint(rows, columns);
+
+            return new Size(
+                columns * blueprint.Cell_Size + blueprint.Clue_Spacing * 4,
+                rows * blueprint.Cell_Size + blueprint.Clue_Spacing * 4);
+        }
+
         public void Draw(Graphics g)
         {
             // Draw the cells
@@ -271,100 +517,31 @@ namespace Nonogram
             {
                 for (int row = 0; row < m_rows; row++)
                 {
-                    switch (m_cells[column, row].State)
-                    {
-                        // on == filled in square
-                        case Cell_State.on:
-                            {
-                                g.FillRectangle(
-                                    k_cell_on_brush,
-                                    m_cells[column, row].Screen_Rectangle);
-                            }
-                            break;
-
-                        // off == X
-                        case Cell_State.off:
-                            {
-                                int center_x = m_exterior_rectangle.Left + k_cell_size * column + k_cell_size / 2;
-                                int center_y = m_exterior_rectangle.Top + k_cell_size * row + k_cell_size / 2;
-
-                                g.DrawLine(k_cell_off_pen,
-                                    center_x - k_cell_off_offset, center_y - k_cell_off_offset,
-                                    center_x + k_cell_off_offset, center_y + k_cell_off_offset);
-
-                                g.DrawLine(k_cell_off_pen,
-                                    center_x - k_cell_off_offset, center_y + k_cell_off_offset,
-                                    center_x + k_cell_off_offset, center_y - k_cell_off_offset);
-                            }
-                            break;
-                    }
+                    m_cells[column, row].Draw(g);
                 }
             }
 
             // Draw the inner lines
 
-            for (int column = 1; column < m_columns; column++)
+            foreach (Line_Segment line in m_interior_lines)
             {
-                int x_position = m_exterior_rectangle.Left + k_cell_size * column;
-
-                g.DrawLine(k_interior_pen,
-                    x_position, m_exterior_rectangle.Top,
-                    x_position, m_exterior_rectangle.Bottom);
-            }
-
-            for (int row = 1; row < m_columns; row++)
-            {
-                int y_position = m_exterior_rectangle.Top + k_cell_size * row;
-
-                g.DrawLine(k_interior_pen,
-                    m_exterior_rectangle.Left, y_position,
-                    m_exterior_rectangle.Right, y_position);
+                g.DrawLine(m_blueprint.Interior_Pen, line.First, line.Second);
             }
 
             // Draw the outer rectangle
 
-            g.DrawRectangle(k_exterior_pen, m_exterior_rectangle);
+            g.DrawRectangle(m_blueprint.Exterior_Pen, m_exterior_rectangle);
 
             // Draw the clues
 
-            for (int column = 0; column < m_columns; column++)
+            foreach (Clue clue in m_column_clues)
             {
-                int[] group_sizes = m_column_clues[column].Group_Sizes;
-
-                Point clue_position = m_cells[column, 0].Screen_Rectangle.Location;
-                clue_position.X += k_cell_size / 2;
-                clue_position.Y += k_cell_size / 2;
-
-                clue_position.Y -= k_cell_size / 2 + k_clue_spacing * group_sizes.Length;
-
-                for (int group_index = 0; group_index < group_sizes.Length; group_index++)
-                {
-                    string group_size_string = group_sizes[group_index].ToString();
-
-                    g.DrawString(group_size_string, k_font_brush, k_clue_brush, clue_position, k_clue_format);
-
-                    clue_position.Y += k_clue_spacing;
-                }
+                clue.Draw(g);
             }
 
-            for (int row = 0; row < m_rows; row++)
+            foreach (Clue clue in m_row_clues)
             {
-                int[] group_sizes = m_row_clues[row].Group_Sizes;
-
-                Point clue_position = m_cells[0, row].Screen_Rectangle.Location;
-                clue_position.X += k_cell_size / 2;
-                clue_position.Y += k_cell_size / 2;
-
-                clue_position.X -= k_cell_size / 2 + k_clue_spacing * group_sizes.Length;
-
-                for (int group_index = 0; group_index < group_sizes.Length; group_index++)
-                {
-                    string group_size_string = group_sizes[group_index].ToString();
-
-                    g.DrawString(group_size_string, k_font_brush, k_clue_brush, clue_position, k_clue_format);
-
-                    clue_position.X += k_clue_spacing;
-                }
+                clue.Draw(g);
             }
         }
 
@@ -374,7 +551,7 @@ namespace Nonogram
             {
                 for (int row = 0; row < m_rows; row++)
                 {
-                    if (m_cells[column, row].Screen_Rectangle.Contains(click_location))
+                    if (m_cells[column, row].Contains(click_location))
                     {
                         switch (m_cells[column, row].State)
                         {
@@ -478,7 +655,7 @@ namespace Nonogram
                 int[] permutation = new int[total_section_count];
                 for (int i = 0; i < permutation.Length; i++)
                 {
-                    permutation[i] = (i < off_section_count ? 0 : 1);
+                    permutation[i] = (i < off_section_count ? 0 : 1); // TODO: make these 'on' and off' for code readability.
                 }
 
                 do
@@ -553,6 +730,8 @@ namespace Nonogram
 
             for (int cell_index = 0; cell_index < total_cell_count; cell_index++)
             {
+                // TODO detect that the board is wrong! User made a mistake trying to solve something.
+
                 if (union_of_possibilities[cell_index] != Cell_State.maybe &&
                     union_of_possibilities[cell_index] != group.Cells[cell_index].State)
                 {

@@ -1,7 +1,15 @@
 ﻿using System;
+using System.Drawing;
 
 namespace Nonogram
 {
+    // TODO move to Types.cs ?
+    public struct Line_Segment
+    {
+        public Point First;
+        public Point Second;
+    }
+
     public static class Utilities
     {
         public static string To_String<T>(this T[] list)
