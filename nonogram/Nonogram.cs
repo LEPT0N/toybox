@@ -17,10 +17,10 @@ namespace Nonogram
 
         public Nonogram()
         {
-            Size board_size = Board.Get_Size(20, 20);
+            Size board_size = Board.Get_Size(15, 15);
 
             m_board = new Board(
-                20, 20,
+                15, 15,
                 new Point(k_window_padding,  k_window_padding));
 
             Size window_size = new Size(

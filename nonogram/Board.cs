@@ -127,6 +127,7 @@ namespace Nonogram
 
             private readonly Point[] Group_Positions;
 
+            // Initialize from a known solution
             public Clue(Cell_State[] states, Board_Blueprint blueprint, Point start_point, bool draw_groups_vertically)
             {
                 // Initialize our temp group list to 0s
@@ -187,16 +188,40 @@ namespace Nonogram
 
                 Group_Positions = new Point[total_group_count];
 
+                Initialize_Visual(start_point, draw_groups_vertically);
+            }
+
+            // Initialize from clues
+            public Clue(int[] group_sizes, Board_Blueprint blueprint, Point start_point, bool draw_groups_vertically)
+            {
+                Group_Sizes = new int[group_sizes.Length];
+
+                for (int i = 0; i < group_sizes.Length; i++)
+                {
+                    Group_Sizes[i] = group_sizes[i];
+                }
+
+                // Record data for Draw
+
+                Blueprint = blueprint;
+
+                Group_Positions = new Point[group_sizes.Length];
+
+                Initialize_Visual(start_point, draw_groups_vertically);
+            }
+
+            private void Initialize_Visual(Point start_point, bool draw_groups_vertically)
+            {
                 if (draw_groups_vertically)
                 {
-                    start_point.Y -= Blueprint.Clue_Spacing * total_group_count;
+                    start_point.Y -= Blueprint.Clue_Spacing * Group_Sizes.Length;
                 }
                 else
                 {
-                    start_point.X -= Blueprint.Clue_Spacing * total_group_count;
+                    start_point.X -= Blueprint.Clue_Spacing * Group_Sizes.Length;
                 }
 
-                for (int i = 0; i < total_group_count; i++)
+                for (int i = 0; i < Group_Sizes.Length; i++)
                 {
                     Group_Positions[i] = start_point;
 
@@ -309,7 +334,6 @@ namespace Nonogram
         // TODO work out what's readonly and what's not. is the lifetime of Boad a single puzzle?
         private Cell[,] m_cells;
         private Group[] m_groups;
-        private Cell_State[,] m_solution;
         private Clue[] m_row_clues;
         private Clue[] m_column_clues;
 
@@ -375,78 +399,10 @@ namespace Nonogram
                 }
             }
 
-            // Initialize the solution
-
-            m_solution = new Cell_State[columns, rows];
-
-            for (int row = 0; row < rows; row++)
-            {
-                for (int column = 0; column < columns; column++)
-                {
-                    m_solution[column, row] = Cell_State.off;
-                }
-            }
-
             // TODO not a hardcoded solution maybe? naaaaaaaah
 
-            m_solution[0, 1] = Cell_State.on;
-            m_solution[0, 2] = Cell_State.on;
-
-            m_solution[1, 0] = Cell_State.on;
-            m_solution[1, 1] = Cell_State.on;
-            m_solution[1, 2] = Cell_State.on;
-            m_solution[1, 3] = Cell_State.on;
-
-            m_solution[2, 1] = Cell_State.on;
-            m_solution[2, 2] = Cell_State.on;
-            m_solution[2, 3] = Cell_State.on;
-            m_solution[2, 4] = Cell_State.on;
-
-            m_solution[3, 0] = Cell_State.on;
-            m_solution[3, 1] = Cell_State.on;
-            m_solution[3, 2] = Cell_State.on;
-            m_solution[3, 3] = Cell_State.on;
-
-            m_solution[4, 1] = Cell_State.on;
-            m_solution[4, 2] = Cell_State.on;
-
-            // Generate the clues
-
-            m_column_clues = new Clue[columns];
-
-            for (int column = 0; column < columns; column++)
-            {
-                Cell_State[] solution_states = new Cell_State[rows];
-
-                for (int row = 0; row < rows; row++)
-                {
-                    solution_states[row] = m_solution[column, row];
-                }
-
-                Point clue_position = m_cells[column, 0].Screen_Rectangle.Location;
-                clue_position.X += m_blueprint.Cell_Size / 2;
-                clue_position.Y += m_blueprint.Cell_Size / 2 - m_blueprint.Clue_Board_Offset;
-
-                m_column_clues[column] = new Clue(solution_states, m_blueprint, clue_position, true);
-            }
-
-            m_row_clues = new Clue[rows];
-
-            for (int row = 0; row < rows; row++)
-            {
-                Cell_State[] solution_states = new Cell_State[columns];
-
-                for (int column = 0; column < columns; column++)
-                {
-                    solution_states[column] = m_solution[column, row];
-                }
-
-                Point clue_position = m_cells[0, row].Screen_Rectangle.Location;
-                clue_position.X += m_blueprint.Cell_Size / 2 - m_blueprint.Clue_Board_Offset;
-                clue_position.Y += m_blueprint.Cell_Size / 2;
-
-                m_row_clues[row] = new Clue(solution_states, m_blueprint, clue_position, false);
-            }
+            // Initialize_To_Hardcoded_Heart();
+            Initialize_To_Clues_2020_08_19();
 
             // Collect the cells into groups
 
@@ -475,6 +431,145 @@ namespace Nonogram
                 }
 
                 m_groups[group_count] = group;
+            }
+        }
+
+        private void Initialize_To_Clues_2020_08_19()
+        {
+            int[][] column_hints = new int[][]
+            {
+                new int[]{ 2 },
+                new int[]{ 2, 2 },
+                new int[]{ 3, 2 },
+                new int[]{ 2, 4 },
+                new int[]{ 1, 3 },
+                new int[]{ 6 },
+                new int[]{ 1 },
+                new int[]{ 6, 2 },
+                new int[]{ 5, 5 },
+                new int[]{ 6, 2 },
+                new int[]{ 3, 2, 4 },
+                new int[]{ 5, 7 },
+                new int[]{ 4, 1, 2 },
+                new int[]{ 2, 4 },
+                new int[]{ 2 },
+            };
+
+            int[][] row_hints = new int[][]
+            {
+                new int[]{ 2 },
+                new int[]{ 4 },
+                new int[]{ 5 },
+                new int[]{ 2, 3 },
+                new int[]{ 3, 6 },
+                new int[]{ 2, 1, 6 },
+                new int[]{ 2, 1, 1 },
+                new int[]{ 2, 1, 1, 1, 3 },
+                new int[]{ 1, 1, 3, 1 },
+                new int[]{ 2, 1, 2, 2 },
+                new int[]{ 1, 1, 2, 2, 2 },
+                new int[]{ 2, 2, 1, 2 },
+                new int[]{ 3, 3, 1 },
+                new int[]{ 2, 2, 2 },
+                new int[]{ 1, 1, 1 },
+            };
+
+            m_column_clues = new Clue[m_columns];
+
+            for (int column = 0; column < m_columns; column++)
+            {
+                Point clue_position = m_cells[column, 0].Screen_Rectangle.Location;
+                clue_position.X += m_blueprint.Cell_Size / 2;
+                clue_position.Y += m_blueprint.Cell_Size / 2 - m_blueprint.Clue_Board_Offset;
+
+                m_column_clues[column] = new Clue(column_hints[column], m_blueprint, clue_position, true);
+            }
+
+            m_row_clues = new Clue[m_rows];
+
+            for (int row = 0; row < m_rows; row++)
+            {
+                Point clue_position = m_cells[0, row].Screen_Rectangle.Location;
+                clue_position.X += m_blueprint.Cell_Size / 2 - m_blueprint.Clue_Board_Offset;
+                clue_position.Y += m_blueprint.Cell_Size / 2;
+
+                m_row_clues[row] = new Clue(row_hints[row], m_blueprint, clue_position, false);
+            }
+        }
+
+        private void Initialize_To_Hardcoded_Heart()
+        {
+            // Initialize the solution
+
+            Cell_State[,] solution = new Cell_State[m_columns, m_rows];
+
+            for (int row = 0; row < m_rows; row++)
+            {
+                for (int column = 0; column < m_columns; column++)
+                {
+                    solution[column, row] = Cell_State.off;
+                }
+            }
+
+            // Heart
+
+            solution[0, 1] = Cell_State.on;
+            solution[0, 2] = Cell_State.on;
+
+            solution[1, 0] = Cell_State.on;
+            solution[1, 1] = Cell_State.on;
+            solution[1, 2] = Cell_State.on;
+            solution[1, 3] = Cell_State.on;
+
+            solution[2, 1] = Cell_State.on;
+            solution[2, 2] = Cell_State.on;
+            solution[2, 3] = Cell_State.on;
+            solution[2, 4] = Cell_State.on;
+
+            solution[3, 0] = Cell_State.on;
+            solution[3, 1] = Cell_State.on;
+            solution[3, 2] = Cell_State.on;
+            solution[3, 3] = Cell_State.on;
+
+            solution[4, 1] = Cell_State.on;
+            solution[4, 2] = Cell_State.on;
+
+            // Generate the clues
+
+            m_column_clues = new Clue[m_columns];
+
+            for (int column = 0; column < m_columns; column++)
+            {
+                Cell_State[] solution_states = new Cell_State[m_rows];
+
+                for (int row = 0; row < m_rows; row++)
+                {
+                    solution_states[row] = solution[column, row];
+                }
+
+                Point clue_position = m_cells[column, 0].Screen_Rectangle.Location;
+                clue_position.X += m_blueprint.Cell_Size / 2;
+                clue_position.Y += m_blueprint.Cell_Size / 2 - m_blueprint.Clue_Board_Offset;
+
+                m_column_clues[column] = new Clue(solution_states, m_blueprint, clue_position, true);
+            }
+
+            m_row_clues = new Clue[m_rows];
+
+            for (int row = 0; row < m_rows; row++)
+            {
+                Cell_State[] solution_states = new Cell_State[m_columns];
+
+                for (int column = 0; column < m_columns; column++)
+                {
+                    solution_states[column] = solution[column, row];
+                }
+
+                Point clue_position = m_cells[0, row].Screen_Rectangle.Location;
+                clue_position.X += m_blueprint.Cell_Size / 2 - m_blueprint.Clue_Board_Offset;
+                clue_position.Y += m_blueprint.Cell_Size / 2;
+
+                m_row_clues[row] = new Clue(solution_states, m_blueprint, clue_position, false);
             }
         }
 
