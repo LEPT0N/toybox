@@ -27,14 +27,9 @@ namespace Nonogram
         {
             Debug.Assert(x >= 0);
 
-            if (x == 0)
-            {
-                return 1;
-            }
+            long result = 1;
 
-            long result = 10;
-
-            for (int i = 1; i < x; i++)
+            for (int i = 0; i < x; i++)
             {
                 result *= 10;
             }
@@ -61,6 +56,7 @@ namespace Nonogram
             return result;
         }
 
+        // Run through Get_Next_Permutation until exhausted, and verify the results.
         private static long Validate_Get_Next_Permutation_For_List(int[] list)
         {
             // Keep track of all permutations we find.

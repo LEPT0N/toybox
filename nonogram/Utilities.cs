@@ -12,11 +12,13 @@ namespace Nonogram
 
     public static class Utilities
     {
+        // Custom list->string implementation
         public static string To_String<T>(this T[] list)
         {
             return "[ " + string.Join(", ", list) + " ]";
         }
 
+        // Swap two elements in a list
         public static void Swap_Elements<T>(this T[] list, int i, int j)
         {
             T temp = list[i];
@@ -24,6 +26,7 @@ namespace Nonogram
             list[j] = temp;
         }
 
+        // Reverse a range of elements in a list
         public static void Reverse_Elements<T>(this T[] list, int i, int j)
         {
             while (i < j)
@@ -34,6 +37,7 @@ namespace Nonogram
             }
         }
 
+        // Create a copy of a list
         public static T[] Copy<T>(this T[] list)
         {
             T[] result = new T[list.Length];
@@ -66,6 +70,7 @@ namespace Nonogram
 
                     // find the entry in list[i + 1, last] that is the next largest after list[i]
                     // We're guaranteed to find something since list[i] < list[i + 1]
+                    // The first one we find is what we want, since list[i + 1, last] is in descending order
                     int next_largest = last;
                     while (list[i] >= list[next_largest])
                     {

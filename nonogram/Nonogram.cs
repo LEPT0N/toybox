@@ -17,11 +17,13 @@ namespace Nonogram
 
         public Nonogram()
         {
-            Size board_size = Board.Get_Size(20, 20);
+            Puzzle puzzle = Default_Puzzles.Heart;
 
             m_board = new Board(
-                20, 20,
+                puzzle,
                 new Point(k_window_padding,  k_window_padding));
+
+            Size board_size = m_board.Get_Size();
 
             Size window_size = new Size(
                 board_size.Width + k_window_padding * 2 + 150, // TODO: based on button sizes
