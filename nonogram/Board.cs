@@ -402,7 +402,8 @@ namespace Nonogram
             // TODO not a hardcoded solution maybe? naaaaaaaah
 
             // Initialize_To_Hardcoded_Heart();
-            Initialize_To_Clues_2020_08_19();
+            //Initialize_To_Clues_2020_08_19();
+            Initialize_To_Clues_Expert_01();
 
             // Collect the cells into groups
 
@@ -472,6 +473,79 @@ namespace Nonogram
                 new int[]{ 3, 3, 1 },
                 new int[]{ 2, 2, 2 },
                 new int[]{ 1, 1, 1 },
+            };
+
+            m_column_clues = new Clue[m_columns];
+
+            for (int column = 0; column < m_columns; column++)
+            {
+                Point clue_position = m_cells[column, 0].Screen_Rectangle.Location;
+                clue_position.X += m_blueprint.Cell_Size / 2;
+                clue_position.Y += m_blueprint.Cell_Size / 2 - m_blueprint.Clue_Board_Offset;
+
+                m_column_clues[column] = new Clue(column_hints[column], m_blueprint, clue_position, true);
+            }
+
+            m_row_clues = new Clue[m_rows];
+
+            for (int row = 0; row < m_rows; row++)
+            {
+                Point clue_position = m_cells[0, row].Screen_Rectangle.Location;
+                clue_position.X += m_blueprint.Cell_Size / 2 - m_blueprint.Clue_Board_Offset;
+                clue_position.Y += m_blueprint.Cell_Size / 2;
+
+                m_row_clues[row] = new Clue(row_hints[row], m_blueprint, clue_position, false);
+            }
+        }
+
+        private void Initialize_To_Clues_Expert_01()
+        {
+            int[][] column_hints = new int[][]
+            {
+                new int[]{ 1 },
+                new int[]{ 3 },
+                new int[]{ 2, 3 },
+                new int[]{ 3, 5 },
+                new int[]{ 3, 3, 3 },
+                new int[]{ 1, 3, 2, 6 },
+                new int[]{ 1, 2, 2, 8 },
+                new int[]{ 2, 3, 2, 5 },
+                new int[]{ 2, 8 },
+                new int[]{ 3, 6, 1 },
+                new int[]{ 4, 5, 3 },
+                new int[]{ 7, 5 },
+                new int[]{ 5, 3 },
+                new int[]{ 2, 4 },
+                new int[]{ 3, 5, 2 },
+                new int[]{ 3, 6 },
+                new int[]{ 3, 3 },
+                new int[]{ 4 },
+                new int[]{ 5 },
+                new int[]{ 2 },
+            };
+
+            int[][] row_hints = new int[][]
+            {
+                new int[]{ 5 },
+                new int[]{ 4 },
+                new int[]{ 3, 3 },
+                new int[]{ 7, 2 },
+                new int[]{ 8, 2 },
+                new int[]{ 2, 3, 5 },
+                new int[]{ 10 },
+                new int[]{ 9, 5 },
+                new int[]{ 11, 3 },
+                new int[]{ 3, 3, 3, 3 },
+                new int[]{ 2, 5, 3, 2 },
+                new int[]{ 2, 2, 5, 1 },
+                new int[]{ 1, 2, 2, 3 },
+                new int[]{ 2, 3, 3 },
+                new int[]{ 3, 2, 2 },
+                new int[]{ 2, 2, 2 },
+                new int[]{ 2, 1 },
+                new int[]{ 3 },
+                new int[]{ 3 },
+                new int[]{ 3 },
             };
 
             m_column_clues = new Clue[m_columns];
