@@ -47,7 +47,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Board.cs" />
+    <Compile Include="Board_Style.cs" />
     <Compile Include="Button.cs" />
+    <Compile Include="Cell.cs" />
     <Compile Include="Nonogram.cs">
       <SubType>Form</SubType>
     </Compile>

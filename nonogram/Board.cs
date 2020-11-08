@@ -14,121 +14,16 @@ namespace Nonogram
     {
         // Private type definitions
 
-        private struct Board_Blueprint
-        {
-            public int Cell_Size;
-
-            public Pen Exterior_Pen;
-            public Pen Interior_Pen;
-
-            public Brush Cell_On_Brush;
-            public Pen Cell_Off_Pen;
-
-            public int Cell_Off_Size { get => Cell_Size * 3 / 8; }
-
-            public Font Clue_Font;
-            public static readonly StringFormat Clue_Format;
-            public Brush Clue_Brush;
-            public int Clue_Spacing;
-            public int Clue_Board_Offset;
-
-            static Board_Blueprint()
-            {
-                Clue_Format = new StringFormat();
-                Clue_Format.Alignment = StringAlignment.Center;
-                Clue_Format.LineAlignment = StringAlignment.Center;
-            }
-        }
-
-        private enum Board_Blueprint_Type
-        {
-            Small = 0,
-            Medium = 1,
-            Large = 2,
-            Huge = 3,
-        }
-
-        private enum Cell_State
-        {
-            off,
-            maybe,
-            on,
-        }
-
-        private class Cell
-        {
-            public Cell_State State;
-
-            public readonly Rectangle Screen_Rectangle;
-
-            private readonly Board_Blueprint Blueprint;
-
-            private readonly Line_Segment[] Off_Lines;
-
-            public Cell(Cell_State initial_state, Board_Blueprint blueprint, Rectangle screen_rectangle)
-            {
-                State = initial_state;
-                Screen_Rectangle = screen_rectangle;
-
-                Blueprint = blueprint;
-
-                int off_left = Screen_Rectangle.X + blueprint.Cell_Size / 2 - blueprint.Cell_Off_Size;
-                int off_right = Screen_Rectangle.X + blueprint.Cell_Size / 2 + blueprint.Cell_Off_Size;
-                int off_top = Screen_Rectangle.Y + blueprint.Cell_Size / 2 - blueprint.Cell_Off_Size;
-                int off_bottom = Screen_Rectangle.Y + blueprint.Cell_Size / 2 + blueprint.Cell_Off_Size;
-
-                Off_Lines = new Line_Segment[]
-                {
-                    new Line_Segment
-                    {
-                        First = new Point(off_left, off_top),
-                        Second = new Point(off_right, off_bottom),
-                    },
-                    new Line_Segment
-                    {
-                        First = new Point(off_right, off_top),
-                        Second = new Point(off_left, off_bottom),
-                    },
-                };
-            }
-
-            public bool Contains(Point point)
-            {
-                return Screen_Rectangle.Contains(point);
-            }
-
-            public void Draw(Graphics g)
-            {
-                switch (State)
-                {
-                    // on == filled in square
-                    case Cell_State.on:
-                        {
-                            g.FillRectangle(Blueprint.Cell_On_Brush, Screen_Rectangle);
-                        }
-                        break;
-
-                    // off == X
-                    case Cell_State.off:
-                        {
-                            g.DrawLine(Blueprint.Cell_Off_Pen, Off_Lines[0].First, Off_Lines[0].Second);
-                            g.DrawLine(Blueprint.Cell_Off_Pen, Off_Lines[1].First, Off_Lines[1].Second);
-                        }
-                        break;
-                }
-            }
-        }
-
         private class Clue
         {
             public readonly int[] Group_Sizes;
 
-            private readonly Board_Blueprint Blueprint;
+            private readonly Board_Style Style;
 
             private readonly Point[] Group_Positions;
 
             // Initialize from a known solution
-            public Clue(Cell_State[] states, Board_Blueprint blueprint, Point start_point, bool draw_groups_vertically)
+            public Clue(Cell.State[] states, Board_Style style, Point start_point, bool draw_groups_vertically)
             {
                 // Initialize our temp group list to 0s
 
@@ -146,7 +41,7 @@ namespace Nonogram
 
                 for (int i = 0; i < states.Length; i++)
                 {
-                    if (states[i] == Cell_State.on)
+                    if (states[i] == Cell.State.on)
                     {
                         // If we find an 'on' cell, we're in a group.
 
@@ -184,7 +79,7 @@ namespace Nonogram
 
                 // Record data for Draw
 
-                Blueprint = blueprint;
+                Style = style;
 
                 Group_Positions = new Point[total_group_count];
 
@@ -192,7 +87,7 @@ namespace Nonogram
             }
 
             // Initialize from clues
-            public Clue(int[] group_sizes, Board_Blueprint blueprint, Point start_point, bool draw_groups_vertically)
+            public Clue(int[] group_sizes, Board_Style style, Point start_point, bool draw_groups_vertically)
             {
                 Group_Sizes = new int[group_sizes.Length];
 
@@ -203,7 +98,7 @@ namespace Nonogram
 
                 // Record data for Draw
 
-                Blueprint = blueprint;
+                Style = style;
 
                 Group_Positions = new Point[group_sizes.Length];
 
@@ -214,11 +109,11 @@ namespace Nonogram
             {
                 if (draw_groups_vertically)
                 {
-                    start_point.Y -= Blueprint.Clue_Spacing * Group_Sizes.Length;
+                    start_point.Y -= Style.Clue_Spacing * Group_Sizes.Length;
                 }
                 else
                 {
-                    start_point.X -= Blueprint.Clue_Spacing * Group_Sizes.Length;
+                    start_point.X -= Style.Clue_Spacing * Group_Sizes.Length;
                 }
 
                 for (int i = 0; i < Group_Sizes.Length; i++)
@@ -227,11 +122,11 @@ namespace Nonogram
 
                     if (draw_groups_vertically)
                     {
-                        start_point.Y += Blueprint.Clue_Spacing;
+                        start_point.Y += Style.Clue_Spacing;
                     }
                     else
                     {
-                        start_point.X += Blueprint.Clue_Spacing;
+                        start_point.X += Style.Clue_Spacing;
                     }
                 }
             }
@@ -244,10 +139,10 @@ namespace Nonogram
 
                     g.DrawString(
                         group_size_string,
-                        Blueprint.Clue_Font,
-                        Blueprint.Clue_Brush,
+                        Style.Clue_Font,
+                        Style.Clue_Brush,
                         Group_Positions[i],
-                        Board_Blueprint.Clue_Format);
+                        Style.Clue_Format);
                 }
             }
         }
@@ -268,64 +163,12 @@ namespace Nonogram
 
         // Constant Declarations
 
-        private static readonly Board_Blueprint[] k_board_blueprints =
-        {
-            new Board_Blueprint // to work perfectly, the sizes here need to be a multiple of 12
-            {
-                Cell_Size = 108,
-                Exterior_Pen = new Pen(Color.Black, 8),
-                Interior_Pen = new Pen(Color.DarkGray, 4),
-                Cell_On_Brush = new SolidBrush(Color.Black),
-                Cell_Off_Pen = new Pen(Color.Black, 16),
-                Clue_Font = new Font(FontFamily.GenericMonospace, 24),
-                Clue_Brush = new SolidBrush(Color.Black),
-                Clue_Spacing = 30,
-                Clue_Board_Offset = 50,
-            },
-            new Board_Blueprint // /2
-            {
-                Cell_Size = 54,
-                Exterior_Pen = new Pen(Color.Black, 4),
-                Interior_Pen = new Pen(Color.DarkGray, 2),
-                Cell_On_Brush = new SolidBrush(Color.Black),
-                Cell_Off_Pen = new Pen(Color.Black, 8),
-                Clue_Font = new Font(FontFamily.GenericMonospace, 12),
-                Clue_Brush = new SolidBrush(Color.Black),
-                Clue_Spacing = 15,
-                Clue_Board_Offset = 25,
-            },
-            new Board_Blueprint // /3
-            {
-                Cell_Size = 36,
-                Exterior_Pen = new Pen(Color.Black, 3),
-                Interior_Pen = new Pen(Color.DarkGray, 1),
-                Cell_On_Brush = new SolidBrush(Color.Black),
-                Cell_Off_Pen = new Pen(Color.Black, 6),
-                Clue_Font = new Font(FontFamily.GenericMonospace, 8),
-                Clue_Brush = new SolidBrush(Color.Black),
-                Clue_Spacing = 10,
-                Clue_Board_Offset = 18,
-            },
-            new Board_Blueprint // /4
-            {
-                Cell_Size = 27,
-                Exterior_Pen = new Pen(Color.Black, 2),
-                Interior_Pen = new Pen(Color.DarkGray, 1),
-                Cell_On_Brush = new SolidBrush(Color.Black),
-                Cell_Off_Pen = new Pen(Color.Black, 4),
-                Clue_Font = new Font(FontFamily.GenericMonospace, 6),
-                Clue_Brush = new SolidBrush(Color.Black),
-                Clue_Spacing = 8,
-                Clue_Board_Offset = 12,
-            },
-        };
-
         // Private data members
 
         private readonly int m_rows;
         private readonly int m_columns;
 
-        private readonly Board_Blueprint m_blueprint;
+        private readonly Board_Style m_style;
 
         private readonly Rectangle m_exterior_rectangle;
 
@@ -344,24 +187,24 @@ namespace Nonogram
             m_rows = puzzle.Row_Hints.Length;
             m_columns = puzzle.Column_Hints.Length;
 
-            m_blueprint = Get_Blueprint(puzzle);
+            m_style = Get_Style(puzzle);
 
             // Initialize the Board's background
 
             m_exterior_rectangle = new Rectangle(
                 new Point(
-                    start_point.X + m_blueprint.Clue_Spacing * 4,
-                    start_point.Y + m_blueprint.Clue_Spacing * 4),
+                    start_point.X + m_style.Clue_Spacing * 4,
+                    start_point.Y + m_style.Clue_Spacing * 4),
                 new Size(
-                    m_columns * m_blueprint.Cell_Size,
-                    m_rows * m_blueprint.Cell_Size));
+                    m_columns * m_style.Cell_Size,
+                    m_rows * m_style.Cell_Size));
 
             m_interior_lines = new Line_Segment[m_rows - 1 + m_columns - 1];
             int line_segment_index = 0;
 
             for (int column = 1; column < m_columns; column++, line_segment_index++)
             {
-                int x_position = m_exterior_rectangle.Left + m_blueprint.Cell_Size * column;
+                int x_position = m_exterior_rectangle.Left + m_style.Cell_Size * column;
 
                 m_interior_lines[line_segment_index] = new Line_Segment
                 {
@@ -372,7 +215,7 @@ namespace Nonogram
 
             for (int row = 1; row < m_columns; row++, line_segment_index++)
             {
-                int y_position = m_exterior_rectangle.Top + m_blueprint.Cell_Size * row;
+                int y_position = m_exterior_rectangle.Top + m_style.Cell_Size * row;
 
                 m_interior_lines[line_segment_index] = new Line_Segment
                 {
@@ -390,12 +233,12 @@ namespace Nonogram
                 for (int column = 0; column < m_columns; column++)
                 {
                     m_cells[column, row] = new Cell(
-                        Cell_State.maybe,
-                        m_blueprint,
+                        Cell.State.maybe,
+                        m_style,
                         new Rectangle(
-                            m_exterior_rectangle.Left + m_blueprint.Cell_Size * column,
-                            m_exterior_rectangle.Top + m_blueprint.Cell_Size * row,
-                            m_blueprint.Cell_Size, m_blueprint.Cell_Size));
+                            m_exterior_rectangle.Left + m_style.Cell_Size * column,
+                            m_exterior_rectangle.Top + m_style.Cell_Size * row,
+                            m_style.Cell_Size, m_style.Cell_Size));
                 }
             }
 
@@ -406,10 +249,10 @@ namespace Nonogram
             for (int column = 0; column < m_columns; column++)
             {
                 Point clue_position = m_cells[column, 0].Screen_Rectangle.Location;
-                clue_position.X += m_blueprint.Cell_Size / 2;
-                clue_position.Y += m_blueprint.Cell_Size / 2 - m_blueprint.Clue_Board_Offset;
+                clue_position.X += m_style.Cell_Size / 2;
+                clue_position.Y += m_style.Cell_Size / 2 - m_style.Clue_Board_Offset;
 
-                m_column_clues[column] = new Clue(puzzle.Column_Hints[column], m_blueprint, clue_position, true);
+                m_column_clues[column] = new Clue(puzzle.Column_Hints[column], m_style, clue_position, true);
             }
 
             m_row_clues = new Clue[m_rows];
@@ -417,10 +260,10 @@ namespace Nonogram
             for (int row = 0; row < m_rows; row++)
             {
                 Point clue_position = m_cells[0, row].Screen_Rectangle.Location;
-                clue_position.X += m_blueprint.Cell_Size / 2 - m_blueprint.Clue_Board_Offset;
-                clue_position.Y += m_blueprint.Cell_Size / 2;
+                clue_position.X += m_style.Cell_Size / 2 - m_style.Clue_Board_Offset;
+                clue_position.Y += m_style.Cell_Size / 2;
 
-                m_row_clues[row] = new Clue(puzzle.Row_Hints[row], m_blueprint, clue_position, false);
+                m_row_clues[row] = new Clue(puzzle.Row_Hints[row], m_style, clue_position, false);
             }
 
             // Collect the cells into groups
@@ -453,33 +296,33 @@ namespace Nonogram
             }
         }
 
-        private static Board_Blueprint Get_Blueprint(Puzzle puzzle)
+        private static Board_Style Get_Style(Puzzle puzzle)
         {
             int largest_side = Math.Max(puzzle.Row_Hints.Length, puzzle.Column_Hints.Length);
 
             if (largest_side <= 5)
             {
-                return k_board_blueprints[(int)Board_Blueprint_Type.Small];
+                return Board_Style.Get_Style(Board_Style.Type.Small);
             }
             else if (largest_side <= 10)
             {
-                return k_board_blueprints[(int)Board_Blueprint_Type.Medium];
+                return Board_Style.Get_Style(Board_Style.Type.Medium);
             }
             else if (largest_side <= 15)
             {
-                return k_board_blueprints[(int)Board_Blueprint_Type.Large];
+                return Board_Style.Get_Style(Board_Style.Type.Large);
             }
             else
             {
-                return k_board_blueprints[(int)Board_Blueprint_Type.Huge];
+                return Board_Style.Get_Style(Board_Style.Type.Huge);
             }
         }
 
         public Size Get_Size()
         {
             return new Size(
-                m_columns * m_blueprint.Cell_Size + m_blueprint.Clue_Spacing * 4,
-                m_rows * m_blueprint.Cell_Size + m_blueprint.Clue_Spacing * 4);
+                m_columns * m_style.Cell_Size + m_style.Clue_Spacing * 4,
+                m_rows * m_style.Cell_Size + m_style.Clue_Spacing * 4);
         }
 
         public void Draw(Graphics g)
@@ -498,12 +341,12 @@ namespace Nonogram
 
             foreach (Line_Segment line in m_interior_lines)
             {
-                g.DrawLine(m_blueprint.Interior_Pen, line.First, line.Second);
+                g.DrawLine(m_style.Interior_Pen, line.First, line.Second);
             }
 
             // Draw the outer rectangle
 
-            g.DrawRectangle(m_blueprint.Exterior_Pen, m_exterior_rectangle);
+            g.DrawRectangle(m_style.Exterior_Pen, m_exterior_rectangle);
 
             // Draw the clues
 
@@ -526,18 +369,18 @@ namespace Nonogram
                 {
                     if (m_cells[column, row].Contains(click_location))
                     {
-                        switch (m_cells[column, row].State)
+                        switch (m_cells[column, row].state)
                         {
-                            case Cell_State.off:
-                                m_cells[column, row].State = Cell_State.maybe;
+                            case Cell.State.off:
+                                m_cells[column, row].state = Cell.State.maybe;
                                 break;
 
-                            case Cell_State.maybe:
-                                m_cells[column, row].State = Cell_State.on;
+                            case Cell.State.maybe:
+                                m_cells[column, row].state = Cell.State.on;
                                 break;
 
-                            case Cell_State.on:
-                                m_cells[column, row].State = Cell_State.off;
+                            case Cell.State.on:
+                                m_cells[column, row].state = Cell.State.off;
                                 break;
                         }
 
@@ -549,29 +392,29 @@ namespace Nonogram
             return false;
         }
 
-        private Cell_State[] Convert_Permutation_To_Possibility(
+        private Cell.State[] Convert_Permutation_To_Possibility(
             int[] group_sizes,
             int[] permutation)
         {
             int group_index = 0;
-            List<Cell_State> result = new List<Cell_State>();
+            List<Cell.State> result = new List<Cell.State>();
 
             for (int i = 0; i < permutation.Length; i++)
             {
                 if (permutation[i] == 0)
                 {
-                    result.Add(Cell_State.off);
+                    result.Add(Cell.State.off);
                 }
                 else
                 {
                     if (group_index > 0)
                     {
-                        result.Add(Cell_State.off);
+                        result.Add(Cell.State.off);
                     }
 
                     for (int j = 0; j < group_sizes[group_index]; j++)
                     {
-                        result.Add(Cell_State.on);
+                        result.Add(Cell.State.on);
                     }
 
                     group_index++;
@@ -581,13 +424,13 @@ namespace Nonogram
             return result.ToArray();
         }
 
-        private bool Is_Valid_Possibility(Cell_State[] possibility, Cell[] cells)
+        private bool Is_Valid_Possibility(Cell.State[] possibility, Cell[] cells)
         {
             for (int i = 0; i < cells.Length; i++)
             {
-                if (cells[i].State != Cell_State.maybe)
+                if (cells[i].state != Cell.State.maybe)
                 {
-                    if (cells[i].State != possibility[i])
+                    if (cells[i].state != possibility[i])
                     {
                         return false;
                     }
@@ -639,12 +482,12 @@ namespace Nonogram
 
             // convert each permutation back to a possibile solution for the group
 
-            List<Cell_State[]> possibilities = new List<Cell_State[]>();
+            List<Cell.State[]> possibilities = new List<Cell.State[]>();
 
             {
                 foreach (int[] permutation in permutations)
                 {
-                    Cell_State[] possibility = Convert_Permutation_To_Possibility(
+                    Cell.State[] possibility = Convert_Permutation_To_Possibility(
                         group.Group_Clue.Group_Sizes,
                         permutation);
 
@@ -659,24 +502,24 @@ namespace Nonogram
 
             // Compute the union of all valid possibilities
 
-            Cell_State[] union_of_possibilities = new Cell_State[total_cell_count];
+            Cell.State[] union_of_possibilities = new Cell.State[total_cell_count];
             {
                 for (int cell_index = 0; cell_index < total_cell_count; cell_index++)
                 {
-                    union_of_possibilities[cell_index] = Cell_State.maybe;
+                    union_of_possibilities[cell_index] = Cell.State.maybe;
 
                     bool cell_can_possibly_be_on = false;
                     bool cell_can_possibly_be_off = false;
 
-                    foreach (Cell_State[] possibility in possibilities)
+                    foreach (Cell.State[] possibility in possibilities)
                     {
                         switch (possibility[cell_index])
                         {
-                            case Cell_State.on:
+                            case Cell.State.on:
                                 cell_can_possibly_be_on = true;
                                 break;
 
-                            case Cell_State.off:
+                            case Cell.State.off:
                                 cell_can_possibly_be_off = true;
                                 break;
                         }
@@ -684,15 +527,15 @@ namespace Nonogram
 
                     if (cell_can_possibly_be_on && !cell_can_possibly_be_off)
                     {
-                        union_of_possibilities[cell_index] = Cell_State.on;
+                        union_of_possibilities[cell_index] = Cell.State.on;
                     }
                     else if (cell_can_possibly_be_off && !cell_can_possibly_be_on)
                     {
-                        union_of_possibilities[cell_index] = Cell_State.off;
+                        union_of_possibilities[cell_index] = Cell.State.off;
                     }
                     else
                     {
-                        union_of_possibilities[cell_index] = Cell_State.maybe;
+                        union_of_possibilities[cell_index] = Cell.State.maybe;
                     }
                 }
             }
@@ -705,10 +548,10 @@ namespace Nonogram
             {
                 // TODO detect that the board is wrong! User made a mistake trying to solve something.
 
-                if (union_of_possibilities[cell_index] != Cell_State.maybe &&
-                    union_of_possibilities[cell_index] != group.Cells[cell_index].State)
+                if (union_of_possibilities[cell_index] != Cell.State.maybe &&
+                    union_of_possibilities[cell_index] != group.Cells[cell_index].state)
                 {
-                    group.Cells[cell_index].State = union_of_possibilities[cell_index];
+                    group.Cells[cell_index].state = union_of_possibilities[cell_index];
 
                     changed_something = true;
                 }

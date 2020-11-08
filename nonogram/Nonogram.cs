@@ -17,7 +17,7 @@ namespace Nonogram
 
         public Nonogram()
         {
-            Puzzle puzzle = Default_Puzzles.Heart;
+            Puzzle puzzle = Default_Puzzles.Expert_01;
 
             m_board = new Board(
                 puzzle,
