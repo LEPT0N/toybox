@@ -143,5 +143,45 @@ namespace Nonogram
                 return puzzle;
             }
         }
+        public static Puzzle Bungie_Feb_2021_Newsletter
+        {
+            get
+            {
+                Puzzle puzzle = new Puzzle();
+
+                puzzle.Column_Hints = new int[][]
+                {
+                    new int[]{ 3 },
+                    new int[]{ 4 },
+                    new int[]{ 4 },
+                    new int[]{ 5 },
+                    new int[]{ 6 },
+                    new int[]{ 3, 5 },
+                    new int[]{ 3, 5 },
+                    new int[]{ 6 },
+                    new int[]{ 5 },
+                    new int[]{ 4 },
+                    new int[]{ 4 },
+                    new int[]{ 3 },
+                };
+
+                puzzle.Row_Hints = new int[][]
+                {
+                    new int[]{ 3, 3 },
+                    new int[]{ 4, 2, 4 },
+                    new int[]{ 4, 2, 4 },
+                    new int[]{ 3, 2, 3 },
+                    new int[]{ 2, 2 },
+                    new int[]{ 2, 2 },
+                    new int[]{ 4 },
+                    new int[]{ 4 },
+                    new int[]{ 4 },
+                    new int[]{ 4 },
+                    new int[]{ 2 },
+                };
+
+                return puzzle;
+            }
+        }
     }
 }

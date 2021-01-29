@@ -213,7 +213,7 @@ namespace Nonogram
                 };
             }
 
-            for (int row = 1; row < m_columns; row++, line_segment_index++)
+            for (int row = 1; row < m_rows; row++, line_segment_index++)
             {
                 int y_position = m_exterior_rectangle.Top + m_style.Cell_Size * row;
 
