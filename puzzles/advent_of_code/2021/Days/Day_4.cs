@@ -42,10 +42,12 @@ namespace advent_of_code_2021.Days
             {
                 Value = value;
                 Marked = false;
+                Winner = false;
             }
 
             public readonly int Value;
             public bool Marked;
+            public bool Winner;
         }
 
         public bool Winner { get; private set; } = false;
@@ -74,9 +76,18 @@ namespace advent_of_code_2021.Days
             {
                 for (int column = 0; column < k_bingo_board_side; column++)
                 {
-                    Console.ForegroundColor = (m_spaces[row, column].Marked ?
-                        ConsoleColor.Green :
-                        ConsoleColor.Gray);
+                    if (m_spaces[row, column].Winner)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                    }
+                    else if (m_spaces[row, column].Marked)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Green;
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Gray;
+                    }
 
                     Console.Write(String.Format("{0,3}", m_spaces[row, column].Value));
                 }
@@ -149,6 +160,11 @@ namespace advent_of_code_2021.Days
 
                 if (is_set_winner)
                 {
+                    for (int j = 0; j < k_sets.GetLength(1); j++)
+                    {
+                        m_spaces[k_sets[i, j, 0], k_sets[i, j, 1]].Winner = true;
+                    }
+
                     return true;
                 }
             }
@@ -248,12 +264,17 @@ namespace advent_of_code_2021.Days
 
             foreach (int move in moves)
             {
+                Console.WriteLine(move);
+
                 foreach (c_bingo_board board in boards)
                 {
                     board.check_move(move);
 
                     if (board.Winner)
                     {
+                        board.print();
+                        Console.WriteLine();
+
                         if (first_winning_board == null)
                         {
                             first_winning_board = board;
@@ -281,6 +302,8 @@ namespace advent_of_code_2021.Days
             Console.WriteLine();
             Console.WriteLine("Winning Move = " + last_winning_board.Winning_Move);
             Console.WriteLine("Winning Score = " + last_winning_board.Score);
+
+            Console.WriteLine();
         }
     }
 }
