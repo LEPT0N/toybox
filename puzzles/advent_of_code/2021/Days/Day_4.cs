@@ -262,6 +262,12 @@ namespace advent_of_code_2021.Days
             c_bingo_board first_winning_board = null;
             c_bingo_board last_winning_board = null;
 
+            int highest_score = int.MinValue;
+            c_bingo_board highest_scoring_board = null;
+
+            int lowest_score = int.MaxValue;
+            c_bingo_board lowest_scoring_board = null;
+
             foreach (int move in moves)
             {
                 Console.WriteLine(move);
@@ -280,12 +286,26 @@ namespace advent_of_code_2021.Days
                             first_winning_board = board;
                         }
 
+                        if (board.Score > highest_score)
+                        {
+                            highest_score = board.Score;
+                            highest_scoring_board = board;
+                        }
+
+                        if (board.Score < lowest_score)
+                        {
+                            lowest_score = board.Score;
+                            lowest_scoring_board = board;
+                        }
+
                         last_winning_board = board;
                     }
                 }
 
                 boards = boards.Where(x => !x.Winner).ToList();
             }
+
+            Console.WriteLine();
 
             Console.WriteLine("First Winning Board:");
             Console.WriteLine();
@@ -302,6 +322,24 @@ namespace advent_of_code_2021.Days
             Console.WriteLine();
             Console.WriteLine("Winning Move = " + last_winning_board.Winning_Move);
             Console.WriteLine("Winning Score = " + last_winning_board.Score);
+
+            Console.WriteLine();
+
+            Console.WriteLine("Highest Scoring Board:");
+            Console.WriteLine();
+            highest_scoring_board.print();
+            Console.WriteLine();
+            Console.WriteLine("Winning Move = " + highest_scoring_board.Winning_Move);
+            Console.WriteLine("Winning Score = " + highest_scoring_board.Score);
+
+            Console.WriteLine();
+
+            Console.WriteLine("Lowest Scoring Board:");
+            Console.WriteLine();
+            lowest_scoring_board.print();
+            Console.WriteLine();
+            Console.WriteLine("Winning Move = " + lowest_scoring_board.Winning_Move);
+            Console.WriteLine("Winning Score = " + lowest_scoring_board.Score);
 
             Console.WriteLine();
         }
