@@ -6,32 +6,6 @@ using System.Threading.Tasks;
 
 namespace advent_of_code_2021.Days
 {
-    internal class c_input_reader
-    {
-        public c_input_reader(string input)
-        {
-            m_line_number = 0;
-            m_lines = System.IO.File.ReadAllLines(input);
-        }
-
-        public string read_line()
-        {
-            string result = m_lines[m_line_number];
-
-            m_line_number++;
-
-            return result;
-        }
-
-        public bool has_more_lines()
-        {
-            return m_line_number < m_lines.Length;
-        }
-
-        private string[] m_lines;
-        private int m_line_number;
-    }
-
     internal class c_bingo_board
     {
         private const int k_bingo_board_side = 5;
