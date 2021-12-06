@@ -442,6 +442,23 @@ namespace Nonogram
 
         private bool Process_Group(Group group)
         {
+            /* To describe this process, let's use the example group of size 10 with hint '4 3'
+             * 
+             * What we want is to figure out all possible solutions, and then use that to determine
+             * 
+             * 
+             */
+
+            /* Count how many sections we have
+             * 
+             * Sections are 'on, on, on, on', 'off, on, on, on', 'off', 'off'
+             * 
+             * if a section has an 'on' in it, it's an 'on section'. Otherwise it's an 'off section'.
+             * 
+             * The only wiggle-room we have in this solution is where the two 'off' sections go.
+             * 
+             */
+
             // Count how many 'on' sections and 'off' sections we have in this group.
 
             int total_cell_count = group.Cells.Length;
@@ -558,6 +575,53 @@ namespace Nonogram
             }
 
             return changed_something;
+
+            /*
+             * 1. Build list of all possibilities
+             * 
+             *  collect the cells into sections:
+             *      Say hint is '2 3' in a 10x10 grid
+             *      Sections would be:
+             *          1 instance of: 'on,on'
+             *          1 instance of: 'off,on,on,on'
+             *          4 instances of: 'off'
+             *      So the question now comes down to where to put the 4 free-floating 'off's
+             *      
+             *      to represent this specific case, we're going to try to solve:
+             *      
+             *          list all permutations of '110000'
+             *              1 = is one of the sections with an 'on'
+             *                  These are all the same for the purposes of permutations
+             *                  because we know their order already from the hints.
+             *              0 = one of the 'off' sections 
+             *                  These are all the same because they're identical.
+             *      
+             *      So now we just need to list through the permutations of '110000'
+             *          Ex: 000011, 000101, 000110, 001001, 001010, 001100, 010001, etc
+             *      In C++, std::next_permutation does this!
+             *          https://helloacm.com/the-next-permutation-algorithm-in-c-stdnext_permutation/
+             *          https://stackoverflow.com/questions/11483060/stdnext-permutation-implementation-explanation
+             * 
+             *      So implement that, and then transform back from the numbers to the final.
+             *          Ex:
+             *              We have a permutations: 000101
+             *              Converted back to the sections: ['off', 'off', 'off', 'on,on', 'off', 'off,on,on,on']
+             *              Final: off,off,off,on,on,off,off,on,on,on
+             * 
+             *
+             * 2. Throw out permutations that are impossible based on the current state of the board.
+             *      ex: permutation is 'off, on, on, off', but board is 'maybe, maybe, maybe, on'
+             *          These permutation isn't possible since the board has 'on' in the last spot.
+             * 
+             * 3. Loop through remaining permutations to compute their 'union'
+             *      ex: if the two permutations were:
+             *           'off, on, on, off'
+             *           'off, off, on, on'
+             *      The union is:
+             *           'off, maybe, on, maybe'
+             *      
+             * 4. Any non-maybes in the 'union' get set into the board's cells.
+             */
         }
 
         public void Give_Hint()
