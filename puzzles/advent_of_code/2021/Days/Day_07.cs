@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace advent_of_code_2021.Days
 {
-    internal class Day_7
+    internal class Day_07
     {
         private static void print_costs(ref int[] costs, int target)
         {

@@ -15,24 +15,24 @@ namespace advent_of_code_2021
 
             switch (day, part)
             {
-                case (1, 1): Day_1.Part_1(input); break;
-                case (1, 2): Day_1.Part_2(input); break;
-                case (2, 1): Day_2.Part_1(input); break;
-                case (2, 2): Day_2.Part_2(input); break;
-                case (3, 1): Day_3.Part_1(input); break;
-                case (3, 2): Day_3.Part_2(input); break;
-                case (4, 1): Day_4.Part_1(input); break;
-                case (4, 2): Day_4.Part_2(input); break;
-                case (5, 1): Day_5.Part_1(input); break;
-                case (5, 2): Day_5.Part_2(input); break;
-                case (6, 1): Day_6.Part_1(input); break;
-                case (6, 2): Day_6.Part_2(input); break;
-                case (7, 1): Day_7.Part_1(input); break;
-                case (7, 2): Day_7.Part_2(input); break;
-                case (8, 1): Day_8.Part_1(input); break;
-                case (8, 2): Day_8.Part_2(input); break;
-                case (9, 1): Day_9.Part_1(input); break;
-                case (9, 2): Day_9.Part_2(input); break;
+                case (1, 1): Day_01.Part_1(input); break;
+                case (1, 2): Day_01.Part_2(input); break;
+                case (2, 1): Day_02.Part_1(input); break;
+                case (2, 2): Day_02.Part_2(input); break;
+                case (3, 1): Day_03.Part_1(input); break;
+                case (3, 2): Day_03.Part_2(input); break;
+                case (4, 1): Day_04.Part_1(input); break;
+                case (4, 2): Day_04.Part_2(input); break;
+                case (5, 1): Day_05.Part_1(input); break;
+                case (5, 2): Day_05.Part_2(input); break;
+                case (6, 1): Day_06.Part_1(input); break;
+                case (6, 2): Day_06.Part_2(input); break;
+                case (7, 1): Day_07.Part_1(input); break;
+                case (7, 2): Day_07.Part_2(input); break;
+                case (8, 1): Day_08.Part_1(input); break;
+                case (8, 2): Day_08.Part_2(input); break;
+                case (9, 1): Day_09.Part_1(input); break;
+                case (9, 2): Day_09.Part_2(input); break;
 
                 default:
                     Console.WriteLine("Unexpected day " + args[0]);

@@ -5,7 +5,7 @@ using System.Linq;
 
 namespace advent_of_code_2021.Days
 {
-    internal class Day_5
+    internal class Day_05
     {
         internal struct c_point
         {

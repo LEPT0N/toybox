@@ -167,7 +167,7 @@ namespace advent_of_code_2021.Days
         }
     }
 
-    internal class Day_4
+    internal class Day_04
     {
         public static void Part_1(string input)
         {

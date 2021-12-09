@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace advent_of_code_2021.Days
 {
-    internal class Day_8
+    internal class Day_08
     {
         public static void Part_1(string input)
         {
