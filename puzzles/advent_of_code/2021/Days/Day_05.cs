@@ -62,7 +62,7 @@ namespace advent_of_code_2021.Days
             }
         }
 
-        public static void Part_1(string input)
+        public static void Part_1(string input, bool pretty)
         {
             c_input_reader input_reader = new c_input_reader(input);
 
@@ -108,7 +108,7 @@ namespace advent_of_code_2021.Days
             Console.WriteLine("Points with overlap: " + points_with_overlap);
         }
 
-        public static void Part_2(string input)
+        public static void Part_2(string input, bool pretty)
         {
             c_input_reader input_reader = new c_input_reader(input);
 

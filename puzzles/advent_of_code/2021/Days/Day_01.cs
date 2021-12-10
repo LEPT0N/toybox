@@ -8,7 +8,7 @@ namespace advent_of_code_2021.Days
 {
     class Day_01
     {
-        public static void Part_1(string input)
+        public static void Part_1(string input, bool pretty)
         {
             string[] lines = System.IO.File.ReadAllLines(input);
 
@@ -32,7 +32,7 @@ namespace advent_of_code_2021.Days
             Console.WriteLine("The total number of depth increases is " + depth_increases);
         }
 
-        public static void Part_2(string input)
+        public static void Part_2(string input, bool pretty)
         {
             string[] lines = System.IO.File.ReadAllLines(input);
 

@@ -36,7 +36,7 @@ namespace advent_of_code_2021.Days
 
     internal class Day_03
     {
-        public static void Part_1(string input)
+        public static void Part_1(string input, bool pretty)
         {
             string[] lines = System.IO.File.ReadAllLines(input);
 
@@ -80,7 +80,7 @@ namespace advent_of_code_2021.Days
             Console.WriteLine("Result = " + (gamma * epsilon));
         }
 
-        public static void Part_2(string input)
+        public static void Part_2(string input, bool pretty)
         {
             string[] lines = System.IO.File.ReadAllLines(input);
 

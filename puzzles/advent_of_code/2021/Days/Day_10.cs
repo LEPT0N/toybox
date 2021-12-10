@@ -47,7 +47,7 @@ namespace advent_of_code_2021.Days
             return 0;
         }
 
-        public static void Part_1(string input)
+        public static void Part_1(string input, bool pretty)
         {
             c_input_reader input_reader = new c_input_reader(input);
 
@@ -119,7 +119,7 @@ namespace advent_of_code_2021.Days
             return 0;
         }
 
-        public static void Part_2(string input)
+        public static void Part_2(string input, bool pretty)
         {
             c_input_reader input_reader = new c_input_reader(input);
 
@@ -135,12 +135,26 @@ namespace advent_of_code_2021.Days
 
                 foreach (char input_char in input_line)
                 {
+                    if (line_corrupt)
+                    {
+                        Console.ForegroundColor = ConsoleColor.DarkGray;
+                        Console.Write(input_char);
+
+                        continue;
+                    }
+
                     if (input_char == '(' ||
                         input_char == '[' ||
                         input_char == '{' ||
                         input_char == '<')
                     {
                         chunks.Push(new c_chunk(input_char));
+
+                        if (pretty)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Gray;
+                            Console.Write(input_char);
+                        }
                     }
                     else
                     {
@@ -148,14 +162,21 @@ namespace advent_of_code_2021.Days
 
                         if (input_char != chunk.end_char)
                         {
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            Console.WriteLine(
-                                "Corrupt line. Expected {0}, but found {1} instead.",
-                                chunk.end_char,
-                                input_char);
+                            if (pretty)
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.Write(input_char);
+                            }
+                            else
+                            {
+                                Console.ForegroundColor = ConsoleColor.Red;
+                                Console.WriteLine(
+                                    "Corrupt line. Expected {0}, but found {1} instead.",
+                                    chunk.end_char,
+                                    input_char);
+                            }
 
                             line_corrupt = true;
-                            break;
                         }
                     }
                 }
@@ -177,11 +198,19 @@ namespace advent_of_code_2021.Days
                             score += get_score2(chunk.end_char);
                         }
 
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.WriteLine(
-                            "Incomplete line. Complete by adding {0}. ({1} points)",
-                            completion,
-                            score);
+                        if (pretty)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            Console.Write(completion);
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            Console.WriteLine(
+                                "Incomplete line. Complete by adding {0}. ({1} points)",
+                                completion,
+                                score);
+                        }
 
                         scores.Add(score);
                     }
@@ -190,6 +219,11 @@ namespace advent_of_code_2021.Days
                         Console.ForegroundColor = ConsoleColor.Gray;
                         Console.WriteLine("Line valid.");
                     }
+                }
+
+                if (pretty)
+                {
+                    Console.WriteLine();
                 }
             }
 

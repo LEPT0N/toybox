@@ -124,12 +124,12 @@ namespace advent_of_code_2021.Days
             Console.ResetColor();
         }
 
-        public static void Part_1(string input)
+        public static void Part_1(string input, bool pretty)
         {
             Day_7_Worker(input, false);
         }
 
-        public static void Part_2(string input)
+        public static void Part_2(string input, bool pretty)
         {
             Day_7_Worker(input, true);
         }

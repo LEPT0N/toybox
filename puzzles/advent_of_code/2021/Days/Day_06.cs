@@ -47,12 +47,12 @@ namespace advent_of_code_2021.Days
             Console.WriteLine("Total Alive = {0} ({1})", total_alive, total_alive.ToString("#,#"));
         }
 
-        public static void Part_1(string input)
+        public static void Part_1(string input, bool pretty)
         {
             Day_6_Worker(input, 80);
         }
 
-        public static void Part_2(string input)
+        public static void Part_2(string input, bool pretty)
         {
             Day_6_Worker(input, 256);
 
