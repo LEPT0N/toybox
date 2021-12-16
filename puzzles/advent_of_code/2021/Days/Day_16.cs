@@ -143,8 +143,10 @@ namespace advent_of_code_2021.Days
         internal interface i_packet_value
         {
             public UInt64 sum_version_numbers();
-
             public UInt64 calculate();
+            public bool is_simple_type();
+            public string to_string();
+            public string to_multiline_string(string indent);
         }
         
         [DebuggerDisplay("value = {payload}", Type = "c_packet_integer_value")]
@@ -176,6 +178,21 @@ namespace advent_of_code_2021.Days
             public UInt64 calculate()
             {
                 return payload;
+            }
+
+            public bool is_simple_type()
+            {
+                return true;
+            }
+
+            public string to_string()
+            {
+                return payload.ToString();
+            }
+
+            public string to_multiline_string(string indent)
+            {
+                return indent + payload.ToString() + "\r\n";
             }
         }
 
@@ -268,6 +285,88 @@ namespace advent_of_code_2021.Days
 
                 return int.MaxValue;
             }
+
+            public bool is_simple_type()
+            {
+                return sub_packets.Count < 4 && sub_packets.All(x => x.is_simple_type());
+            }
+
+            public string to_string()
+            {
+                string result = "";
+
+                switch (operator_type)
+                {
+                    case e_packet_operator_type.sum:
+                        result += String.Format("({0})", string.Join(" + ", sub_packets.Select(packet => packet.to_string())));
+                        break;
+
+                    case e_packet_operator_type.product:
+                        result += String.Format("({0})", string.Join(" * ", sub_packets.Select(packet => packet.to_string())));
+                        break;
+
+                    case e_packet_operator_type.min:
+                        result += String.Format("min({0})", string.Join(", ", sub_packets.Select(packet => packet.to_string())));
+                        break;
+
+                    case e_packet_operator_type.max:
+                        result += String.Format("max({0})", string.Join(", ", sub_packets.Select(packet => packet.to_string())));
+                        break;
+
+                    case e_packet_operator_type.greater_than:
+                        result += String.Format("({0} > {1} ? 1 : 0)", sub_packets.First().to_string(), sub_packets.Last().to_string());
+                        break;
+
+                    case e_packet_operator_type.less_than:
+                        result += String.Format("({0} < {1} ? 1 : 0)", sub_packets.First().to_string(), sub_packets.Last().to_string());
+                        break;
+
+                    case e_packet_operator_type.equal_to:
+                        result += String.Format("({0} == {1} ? 1 : 0)", sub_packets.First().to_string(), sub_packets.Last().to_string());
+                        break;
+                }
+
+                return result;
+            }
+
+            public string to_multiline_string(string indent)
+            {
+                string result = "";
+
+                if (sub_packets.All(x => x.is_simple_type()))
+                {
+                    result = indent + to_string() + "\r\n";
+                }
+                else
+                {
+                    string prefix = "";
+                    switch (operator_type)
+                    {
+                        case e_packet_operator_type.min: prefix = "min"; break;
+                        case e_packet_operator_type.max: prefix = "max"; break;
+                    }
+                    result = indent + prefix + "(\r\n";
+
+                    string joiner = "";
+
+                    switch (operator_type)
+                    {
+                        case e_packet_operator_type.sum: joiner = "+"; break;
+                        case e_packet_operator_type.product: joiner = "*"; break;
+                        case e_packet_operator_type.min: joiner = ","; break;
+                        case e_packet_operator_type.max: joiner = ","; break;
+                        case e_packet_operator_type.greater_than: joiner = ">"; break;
+                        case e_packet_operator_type.less_than: joiner = "<"; break;
+                        case e_packet_operator_type.equal_to: joiner = "=="; break;
+                    }
+
+                    result += string.Join(indent + '\t' + joiner + "\r\n", sub_packets.Select(packet => packet.to_multiline_string(indent + '\t')));
+
+                    result += indent + ")\r\n";
+                }
+
+                return result;
+            }
         }
 
         [DebuggerDisplay("V={version} T={type_id} [{value}]", Type = "c_packet")]
@@ -305,6 +404,21 @@ namespace advent_of_code_2021.Days
             {
                 return value.calculate();
             }
+
+            public bool is_simple_type()
+            {
+                return value.is_simple_type();
+            }
+
+            public string to_string()
+            {
+                return value.to_string();
+            }
+
+            public string to_multiline_string(string indent)
+            {
+                return value.to_multiline_string(indent);
+            }
         }
 
         internal static c_bit_reader parse_input(
@@ -323,15 +437,17 @@ namespace advent_of_code_2021.Days
         {
             c_bit_reader bits = parse_input(input);
 
-            List<c_packet> packets = new List<c_packet>();
-
             UInt64 total_bits_read = 0;
-            while (bits.bits_remaining() >= c_packet.k_min_bit_count)
+            c_packet packet = new c_packet(bits, ref total_bits_read);
+
+            if (pretty)
             {
-                packets.Add(new c_packet(bits, ref total_bits_read));
+                Console.WriteLine(packet.to_string());
+                Console.WriteLine();
+                Console.WriteLine(packet.to_multiline_string(""));
             }
 
-            UInt64 result = packets.Aggregate(0UL, (sum, packet) => sum + packet.sum_version_numbers());
+            UInt64 result = packet.sum_version_numbers();
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine();
@@ -345,6 +461,13 @@ namespace advent_of_code_2021.Days
 
             UInt64 total_bits_read = 0;
             c_packet packet = new c_packet(bits, ref total_bits_read);
+
+            if (pretty)
+            {
+                Console.WriteLine(packet.to_string());
+                Console.WriteLine();
+                Console.WriteLine(packet.to_multiline_string(""));
+            }
 
             UInt64 result = packet.calculate();
 
