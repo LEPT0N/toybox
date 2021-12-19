@@ -373,9 +373,6 @@ namespace advent_of_code_2021.Days
                 return result;
             }
 
-            // 1.4 old on small data --> 0.4
-            // 1:35 old on big data
-
             // Find which equivalent scanner to other has the most beacons in common with this.
             public (int, c_scanner) get_best_equivalence(
                 c_scanner other,
