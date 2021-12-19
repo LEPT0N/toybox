@@ -53,6 +53,8 @@ namespace advent_of_code_2021
                 case (17, 2): Day_17.Part_2(input, pretty); break;
                 case (18, 1): Day_18.Part_1(input, pretty); break;
                 case (18, 2): Day_18.Part_2(input, pretty); break;
+                case (19, 1): Day_19.Part_1(input, pretty); break;
+                case (19, 2): Day_19.Part_2(input, pretty); break;
 
                 default:
                     Console.WriteLine("Unexpected day " + args[0]);
