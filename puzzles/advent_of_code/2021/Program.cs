@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using advent_of_code_2021.Days;
 
 namespace advent_of_code_2021
@@ -9,6 +10,9 @@ namespace advent_of_code_2021
     {
         static void Main(string[] args)
         {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+
             int day = Int32.Parse(args[0]);
             int part = Int32.Parse(args[1]);
             string input = args[2];
@@ -60,6 +64,13 @@ namespace advent_of_code_2021
                     Console.WriteLine("Unexpected day " + args[0]);
                     break;
             }
+
+            stopwatch.Stop();
+
+            Console.WriteLine();
+            Console.ForegroundColor = ConsoleColor.Blue;
+            Console.WriteLine("Time taken = {0}", stopwatch.Elapsed);
+            Console.ResetColor();
         }
     }
 }

@@ -378,9 +378,9 @@ namespace advent_of_code_2021.Days
                 c_scanner other,
                 int min_required_equivalent_beacons)
             {
-                // Note: originally this too 1:35 on the puzzle input data. However, I can ignore the last few
+                // Note: originally this took 1:35s on the puzzle input data. However, I can ignore the last few
                 // translation operations since I know I only care about a match if there are at least
-                // min_required_equivalent_beacons. This brought the timing down to 0:35.
+                // min_required_equivalent_beacons. This brought the timing down to 0:35s.
 
                 c_scanner best_equivalent_other = null;
                 int best_equivalent_beacons = min_required_equivalent_beacons - 1;
@@ -446,9 +446,6 @@ namespace advent_of_code_2021.Days
             string input,
             bool pretty)
         {
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
-
             List<c_scanner> unaligned_scanners = parse_input(input, pretty);
             List<c_scanner> aligned_scanners = new List<c_scanner>();
 
@@ -520,8 +517,6 @@ namespace advent_of_code_2021.Days
                 }
             }
 
-            stopwatch.Stop();
-
             // Output results
 
             Console.ForegroundColor = ConsoleColor.Green;
@@ -531,8 +526,6 @@ namespace advent_of_code_2021.Days
             Console.WriteLine("Max Beacon Distance = {0}", max_distance);
             Console.WriteLine("[{0}, {1}, {2}]", max_a.x, max_a.y, max_a.z);
             Console.WriteLine("[{0}, {1}, {2}]", max_b.x, max_b.y, max_b.z);
-            Console.WriteLine();
-            Console.WriteLine("Time taken = {0}", stopwatch.Elapsed);
             Console.ResetColor();
         }
 
