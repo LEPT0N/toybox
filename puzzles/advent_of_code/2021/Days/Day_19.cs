@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace advent_of_code_2021.Days
 {
@@ -459,26 +461,50 @@ namespace advent_of_code_2021.Days
             {
                 bool found_alignment = false;
 
+                // Loop through each unaligned scanner
                 for (int i = 0; !found_alignment && i < unaligned_scanners.Count; i++)
                 {
-                    for (int j = 0; !found_alignment && j < aligned_scanners.Count; j++)
+                    // Check each unaligned scanner against all aligned scanners in parallel.
+
+                    ConcurrentQueue<c_scanner> job_input = new ConcurrentQueue<c_scanner>();
+                    ConcurrentQueue<c_scanner> job_output = new ConcurrentQueue<c_scanner>();
+
+                    foreach (c_scanner scanner in aligned_scanners)
                     {
-                        // Try aligning these two. If they aligned well enough, consider this scanner aligned.
+                        job_input.Enqueue(scanner);
+                    }
 
-                        (int alignment_count, c_scanner newly_aligned_scanner) = aligned_scanners[j].get_best_equivalence(unaligned_scanners[i], k_min_aligned_beacons);
-
-                        if (alignment_count >= k_min_aligned_beacons)
+                    // Each worker grabs an aligned scanner out of the queue to check alignment. If any output is found, all workers stop grabbing new input.
+                    Action worker = () =>
+                    {
+                        c_scanner aligned_scanner;
+                        while (job_input.TryDequeue(out aligned_scanner) && job_output.Count == 0)
                         {
-                            found_alignment = true;
+                            (int alignment_count, c_scanner newly_aligned_scanner) = aligned_scanner.get_best_equivalence(unaligned_scanners[i], k_min_aligned_beacons);
 
-                            aligned_scanners.Add(newly_aligned_scanner);
-                            unaligned_scanners.RemoveAt(i);
-
-                            Console.WriteLine(
-                                "Aligned Scanners = {0}. Unaligned Scanners = {1} ...",
-                                aligned_scanners.Count,
-                                unaligned_scanners.Count);
+                            if (alignment_count >= k_min_aligned_beacons)
+                            {
+                                job_output.Enqueue(newly_aligned_scanner);
+                                return;
+                            }
                         }
+                    };
+
+                    Parallel.Invoke(worker, worker, worker, worker, worker, worker, worker, worker);
+
+                    // If any alignment was found, take the first one and transfer it from unaligned_scanners to aligned_scanners
+                    c_scanner newly_aligned_scanner;
+                    if (job_output.TryDequeue(out newly_aligned_scanner))
+                    {
+                        found_alignment = true;
+
+                        aligned_scanners.Add(newly_aligned_scanner);
+                        unaligned_scanners.RemoveAt(i);
+
+                        Console.WriteLine(
+                            "Aligned Scanners = {0}. Unaligned Scanners = {1} ...",
+                            aligned_scanners.Count,
+                            unaligned_scanners.Count);
                     }
                 }
             }
