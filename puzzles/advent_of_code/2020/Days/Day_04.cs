@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace advent_of_code_2020.Days
 {
-    internal class Day_4
+    internal class Day_04
     {
         internal class c_passport
         {
@@ -289,11 +289,11 @@ namespace advent_of_code_2020.Days
             Console.ResetColor();
         }
 
-        public static void Part_1(string input)
+        public static void Part_1(string input, bool pretty)
         {
             Day_4_helper(input, false);
         }
-        public static void Part_2(string input)
+        public static void Part_2(string input, bool pretty)
         {
             Day_4_helper(input, true);
         }

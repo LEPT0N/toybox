@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace advent_of_code_2020.Days
 {
-    internal class Day_6
+    internal class Day_06
     {
         internal class c_group
         {
@@ -50,7 +50,7 @@ namespace advent_of_code_2020.Days
             private readonly int m_people;
         }
 
-        public static void Part_1(string input)
+        public static void Part_1(string input, bool pretty)
         {
             c_input_reader input_reader = new c_input_reader(input);
 
@@ -66,7 +66,7 @@ namespace advent_of_code_2020.Days
             Console.WriteLine("Total Answers = {0}", answer_count);
         }
 
-        public static void Part_2(string input)
+        public static void Part_2(string input, bool pretty)
         {
             c_input_reader input_reader = new c_input_reader(input);
 

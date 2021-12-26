@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace advent_of_code_2020.Days
 {
-    internal class Day_3
+    internal class Day_03
     {
-        public static void Part_1(string input)
+        public static void Part_1(string input, bool pretty)
         {
             string[] map = System.IO.File.ReadAllLines(input).ToArray();
 
@@ -29,7 +29,7 @@ namespace advent_of_code_2020.Days
             Console.WriteLine("Trees hit = {0}", trees_hit);
         }
 
-        public static void Part_2(string input)
+        public static void Part_2(string input, bool pretty)
         {
             string[] map = System.IO.File.ReadAllLines(input).ToArray();
 

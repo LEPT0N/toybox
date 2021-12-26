@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace advent_of_code_2020.Days
 {
-    internal class Day_2
+    internal class Day_02
     {
         internal class c_password_rule
         {
@@ -59,7 +59,7 @@ namespace advent_of_code_2020.Days
             private uint[] character_count_maximums = new uint[26];
         }
 
-        public static void Part_1(string input)
+        public static void Part_1(string input, bool pretty)
         {
             string[] entries = System.IO.File.ReadAllLines(input).ToArray();
 
@@ -122,7 +122,7 @@ namespace advent_of_code_2020.Days
             char character;
         }
 
-        public static void Part_2(string input)
+        public static void Part_2(string input, bool pretty)
         {
             string[] entries = System.IO.File.ReadAllLines(input).ToArray();
 

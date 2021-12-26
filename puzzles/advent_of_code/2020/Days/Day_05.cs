@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace advent_of_code_2020.Days
 {
-    internal class Day_5
+    internal class Day_05
     {
         internal class c_seat
         {
@@ -69,7 +69,7 @@ namespace advent_of_code_2020.Days
             private int m_column;
         }
 
-        public static void Part_1(string input)
+        public static void Part_1(string input, bool pretty)
         {
             c_input_reader input_reader = new c_input_reader(input);
 
@@ -89,7 +89,7 @@ namespace advent_of_code_2020.Days
 
             Console.WriteLine("The highest Seat ID = {0}", highest_seat_id);
         }
-        public static void Part_2(string input)
+        public static void Part_2(string input, bool pretty)
         {
             c_input_reader input_reader = new c_input_reader(input);
 

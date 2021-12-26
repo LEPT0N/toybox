@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace advent_of_code_2020.Days
 {
-    internal class Day_7
+    internal class Day_07
     {
         static Regex k_whole_line_pattern = new Regex(@"^([a-z\s]+) bags contain (.+)\.$");
 
@@ -92,7 +92,7 @@ namespace advent_of_code_2020.Days
             }
         }
 
-        public static void Part_1(string input)
+        public static void Part_1(string input, bool pretty)
         {
             Dictionary<string, HashSet<Tuple<int, string>>> contains;
             Dictionary<string, HashSet<string>> contained_by;
@@ -142,7 +142,7 @@ namespace advent_of_code_2020.Days
             Console.ResetColor();
         }
 
-        public static void Part_2(string input)
+        public static void Part_2(string input, bool pretty)
         {
             Dictionary<string, HashSet<Tuple<int, string>>> contains;
             Dictionary<string, HashSet<string>> contained_by;

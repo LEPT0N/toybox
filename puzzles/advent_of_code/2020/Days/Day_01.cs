@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace advent_of_code_2020.Days
 {
-    internal class Day_1
+    internal class Day_01
     {
-        public static void Part_1(string input)
+        public static void Part_1(string input, bool pretty)
         {
             int[] entries= System.IO.File.ReadAllLines(input).Select(x => int.Parse(x)).ToArray();
 
@@ -29,7 +29,7 @@ namespace advent_of_code_2020.Days
                 }
             }
         }
-        public static void Part_2(string input)
+        public static void Part_2(string input, bool pretty)
         {
             int[] entries = System.IO.File.ReadAllLines(input).Select(x => int.Parse(x)).ToArray();
 
