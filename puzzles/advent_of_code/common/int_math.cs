@@ -43,6 +43,19 @@ namespace advent_of_code_common.int_math
                 + Math.Abs(y - other.y)
                 + Math.Abs(z - other.z);
         }
+
+        public int taxi_magnitude()
+        {
+            return taxi_distance(new c_vector());
+        }
+
+        public c_vector add(c_vector other)
+        {
+            return new c_vector(
+                x + other.x,
+                y + other.y,
+                z + other.z);
+        }
     }
 
     public enum e_axis
