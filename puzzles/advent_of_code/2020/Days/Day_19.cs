@@ -1,14 +1,13 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text.RegularExpressions;
 
 namespace advent_of_code_2020.Days
 {
     internal class Day_19
     {
+        // A rule to match messages against.
         internal abstract class c_rule
         {
             public readonly int id;
@@ -18,11 +17,15 @@ namespace advent_of_code_2020.Days
                 id = input_id;
             }
 
-            public abstract (bool, int) try_match(string input, int index = 0);
+            // Get all possible matches for a given input, starting at index.
+            // Return a list of indicies after each match.
+            public abstract int[] get_matches(string input, int index = 0);
 
-            public abstract void fill_null_subrules(c_rule filler = null);
+            // Fill any null subrules with a given rule. If null, use 'this'.
+            public abstract void fill_null_subrules(c_rule filler);
         }
 
+        // A rule that matches a single character.
         [DebuggerDisplay("{DebuggerDisplay,nq}", Type = "c_basic_rule")]
         internal class c_basic_rule : c_rule
         {
@@ -33,19 +36,21 @@ namespace advent_of_code_2020.Days
                 value = input;
             }
 
-            public override (bool, int) try_match(string input, int index = 0)
+            public override int[] get_matches(string input, int index = 0)
             {
+                // Match the single character.
+
                 if (index < input.Length && input[index] == value)
                 {
-                    return (true, index + 1);
+                    return new int[]{ index + 1 };
                 }
                 else
                 {
-                    return (false, 0);
+                    return new int[] { };
                 }
             }
 
-            public override void fill_null_subrules(c_rule filler = null)
+            public override void fill_null_subrules(c_rule filler)
             {
                 return;
             }
@@ -61,6 +66,7 @@ namespace advent_of_code_2020.Days
             }
         }
 
+        // A rule to match a set of subrules appended together.
         [DebuggerDisplay("{DebuggerDisplay,nq}", Type = "c_multi_rule")]
         internal class c_multi_rule : c_rule
         {
@@ -71,38 +77,37 @@ namespace advent_of_code_2020.Days
                 sub_rules = input;
             }
 
-            public override (bool, int) try_match(string input, int index = 0)
+            public override int[] get_matches(string input, int index = 0)
             {
+                // For each subrule, check if it matches against each possible starting index.
+                // If any subrule results in no matches, return no match.
+                // Otherwise if a subrule returns a set of matches, check the next subrule against that new set of indicies.
+                // Return the set of indicies that the last subrule returned.
+
+                int[] matches = new int[] { index };
+
                 foreach (c_rule sub_rule in sub_rules)
                 {
-                    (bool sub_rule_matched, int new_index) = sub_rule.try_match(input, index);
+                    matches = matches.Select(match_index => sub_rule.get_matches(input, match_index)).SelectMany(x =>x).ToArray();
 
-                    if (sub_rule_matched)
+                    if (matches.Length == 0)
                     {
-                        index = new_index;
-                    }
-                    else
-                    {
-                        return (false, 0);
+                        return new int[] { };
                     }
                 }
 
-                return (true, index);
+                return matches;
             }
 
-            public override void fill_null_subrules(c_rule filler = null)
+            public override void fill_null_subrules(c_rule filler)
             {
-                if (filler == null)
-                {
-                    filler = this;
-                }
-
                 for (int i = 0; i < sub_rules.Length; i++)
                 {
                     if (sub_rules[i] == null)
                     {
                         sub_rules[i] = filler;
                     }
+                    // else we don't need to care about calling fill_null_subrules on subrules.
                 }
             }
 
@@ -117,6 +122,7 @@ namespace advent_of_code_2020.Days
             }
         }
 
+        // A rule that is able to match any of a set of subrules.
         [DebuggerDisplay("{DebuggerDisplay,nq}", Type = "c_choice_rule")]
         internal class c_choice_rule : c_rule
         {
@@ -127,32 +133,22 @@ namespace advent_of_code_2020.Days
                 sub_rules = input;
             }
 
-            public override (bool, int) try_match(string input, int index = 0)
+            public override int[] get_matches(string input, int index = 0)
             {
-                // TODO I need to search all, not just the first one that mathces.
+                // Return the total list of all matches from all subrules.
 
-                // I think I should try returning (bool, int)[] for matches found.
+                List<int> matches = new List<int>();
 
                 foreach (c_rule sub_rule in sub_rules)
                 {
-                    (bool sub_rule_matched, int new_index) = sub_rule.try_match(input, index);
-
-                    if (sub_rule_matched)
-                    {
-                        return (true, new_index);
-                    }
+                    matches.AddRange(sub_rule.get_matches(input, index));
                 }
 
-                return (false, 0);
+                return matches.ToArray();
             }
 
-            public override void fill_null_subrules(c_rule filler = null)
+            public override void fill_null_subrules(c_rule filler)
             {
-                if (filler == null)
-                {
-                    filler = this;
-                }
-
                 for (int i = 0; i < sub_rules.Length; i++)
                 {
                     if (sub_rules[i] == null)
@@ -227,21 +223,9 @@ namespace advent_of_code_2020.Days
                     // Check against each rule
                     foreach (int pending_rule_id in pending_rules.Keys)
                     {
-                        // Look for a pending rule which has all subrules in the final rule list.
+                        // Look for a pending rule which has all subrules in the final rule list. (can also contain itself, which won't be in the final rule list yet)
                         if (pending_rules[pending_rule_id].Item1.All(sub_rule_id => sub_rule_id == pending_rule_id || rules.ContainsKey(sub_rule_id)))
                         {
-                            /*bool weird = false;
-
-                            if (pending_rules[pending_rule_id].Item1.Any(sub_rule_id => sub_rule_id == pending_rule_id))
-                            {
-                                weird = true;
-                            }
-
-                            if (weird)
-                            {
-                                continue;
-                            }*/
-
                             string[] multi_rule_definitions = pending_rules[pending_rule_id].Item2.Split(" | ");
 
                             c_multi_rule[] multi_rules = new c_multi_rule[multi_rule_definitions.Length];
@@ -249,7 +233,10 @@ namespace advent_of_code_2020.Days
                             // Build a list of multi rules from the pending rule's definition string.
                             for (int i = 0; i < multi_rule_definitions.Length; i++)
                             {
+                                // Part 1: Just collect the subrules from our final rule list
                                 //c_rule[] sub_rules = multi_rule_definitions[i].Split(" ").Select(x => rules?[int.Parse(x)]).ToArray();
+
+                                // Part 2: Since a rule can now have itself as a subrule, just insert 'null' into the array when that happens.
                                 c_rule[] sub_rules = multi_rule_definitions[i].Split(" ").Select(x => int.Parse(x)).Select(
                                     x => rules.ContainsKey(x) ? rules[x] : null).ToArray();
 
@@ -268,7 +255,8 @@ namespace advent_of_code_2020.Days
                                 new_rule = multi_rules[0];
                             }
 
-                            new_rule.fill_null_subrules();
+                            // Fill nulls with itself, since those were references to itself!
+                            new_rule.fill_null_subrules(new_rule);
 
                             rules[pending_rule_id] = new_rule;
 
@@ -290,9 +278,9 @@ namespace advent_of_code_2020.Days
 
             public bool matches_rule(string message, int rule_id)
             {
-                (bool match, int end_index) = rules[rule_id].try_match(message, 0);
+                int[] matches = rules[rule_id].get_matches(message);
 
-                return match && end_index == message.Length;
+                return matches.Any(match => match == message.Length);
             }
         }
 
@@ -355,12 +343,15 @@ namespace advent_of_code_2020.Days
             string input,
             bool pretty)
         {
-            // parse_input(input, pretty);
-
-            Console.ForegroundColor = ConsoleColor.Green;
-            Console.WriteLine();
-            Console.WriteLine("Result = {0}", 0);
-            Console.ResetColor();
+            // The only difference is that Part 2 can have loops where you replace these lines:
+            //      8: 42
+            //      11: 42 31
+            //
+            // With these:
+            //      8: 42 | 42 8
+            //      11: 42 31 | 42 11 31
+            //
+            Part_1(input, pretty);
         }
     }
 }
