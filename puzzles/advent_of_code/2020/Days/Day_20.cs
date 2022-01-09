@@ -1,4 +1,6 @@
-﻿using System;
+﻿using advent_of_code_common.display_helpers;
+using advent_of_code_common.extensions;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -6,6 +8,38 @@ using System.Linq;
 
 namespace advent_of_code_2020.Days
 {
+    public enum e_grid_value
+    {
+        on,
+        off,
+        monster,
+    }
+
+    public static class grid_value_extensions
+    {
+        public static void display(this e_grid_value value)
+        {
+            switch (value)
+            {
+                case e_grid_value.on:
+                    Console.Write("#");
+                    break;
+
+                case e_grid_value.off:
+                    Console.ForegroundColor = ConsoleColor.DarkBlue;
+                    Console.Write(".");
+                    Console.ResetColor();
+                    break;
+
+                case e_grid_value.monster:
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.Write("O");
+                    Console.ResetColor();
+                    break;
+            }
+        }
+    }
+
     internal class Day_20
     {
         [DebuggerDisplay("{id}: {neighbors.Count} neighbors", Type = "c_tile")]
@@ -138,32 +172,12 @@ namespace advent_of_code_2020.Days
 
             private void flip()
             {
-                bool[,] new_grid = new bool[10, 10];
-
-                for (int i = 0; i < 10; i++)
-                {
-                    for (int j = 0; j < 10; j++)
-                    {
-                        new_grid[i, j] = grid[9 - i, j];
-                    }
-                }
-
-                grid = new_grid;
+                grid = grid.flip();
             }
 
             private void rotate()
             {
-                bool[,] new_grid = new bool[10, 10];
-
-                for (int i = 0; i < 10; i++)
-                {
-                    for (int j = 0; j < 10; j++)
-                    {
-                        new_grid[i, j] = grid[j, 9 - i];
-                    }
-                }
-
-                grid = new_grid;
+                grid = grid.rotate();
             }
 
             private bool try_align(c_tile neighbor)
@@ -243,13 +257,16 @@ namespace advent_of_code_2020.Days
             }
         }
 
-        internal class c_search_target
+        internal abstract class c_search_target
         {
-            public readonly (int, int)[] positions;
-            public readonly int max_row;
-            public readonly int max_column;
+            public (int, int)[] positions;
+            public int max_row;
+            public int max_column;
+        }
 
-            public c_search_target()
+        internal class c_sea_monster_search_target : c_search_target
+        {
+            public c_sea_monster_search_target()
             {
                 List<(int, int)> positions_list = new List<(int, int)>();
 
@@ -286,7 +303,7 @@ namespace advent_of_code_2020.Days
 
         internal class c_combined_tile
         {
-            private bool[][] grid;
+            private e_grid_value[][] grid;
 
             public c_combined_tile(c_tile source)
             {
@@ -300,7 +317,7 @@ namespace advent_of_code_2020.Days
                     source = source.left_neighbor;
                 }
 
-                List<bool[]> grid_list = new List<bool[]>();
+                List<e_grid_value[]> grid_list = new List<e_grid_value[]>();
 
                 // Loop through each row of tiles
                 for (c_tile row_start_tile = source;
@@ -310,7 +327,7 @@ namespace advent_of_code_2020.Days
                     // In each row of tiles, loop through each row of grid positions
                     for (int row = 1; row < 9; row++)
                     {
-                        List<bool> grid_row = new List<bool>();
+                        List<e_grid_value> grid_row = new List<e_grid_value>();
 
                         // Loop through each tile in this row of tiles
                         for (c_tile current = row_start_tile;
@@ -320,7 +337,9 @@ namespace advent_of_code_2020.Days
                             // In each tile, loop through each column of grid positions
                             for (int column = 1; column < 9; column++)
                             {
-                                grid_row.Add(current.get_grid_position(row, column));
+                                e_grid_value value = current.get_grid_position(row, column) ? e_grid_value.on : e_grid_value.off;
+
+                                grid_row.Add(value);
                             }
                         }
 
@@ -332,29 +351,63 @@ namespace advent_of_code_2020.Days
                 grid = grid_list.ToArray();
             }
 
+            private bool try_search(c_search_target search_target)
+            {
+                bool found_target = false;
+
+                for (int row = 0; row < grid.Length - search_target.max_row; row++)
+                {
+                    for (int column = 0; column < grid[row].Length - search_target.max_column; column++)
+                    {
+                        if (search_target.positions.All(search_position => grid[row + search_position.Item1][column + search_position.Item2] != e_grid_value.off))
+                        {
+                            foreach ((int, int) search_position in search_target.positions)
+                            {
+                                grid[row + search_position.Item1][column + search_position.Item2] = e_grid_value.monster;
+                            }
+
+                            found_target = true;
+                        }
+                    }
+                }
+
+                return found_target;
+            }
+
             public void search_for(c_search_target search_target)
             {
-                return; // TODO
+                if (try_search(search_target)) return;
+
+                grid = grid.rotate();
+                if (try_search(search_target)) return;
+
+                grid = grid.rotate();
+                if (try_search(search_target)) return;
+
+                grid = grid.rotate();
+                if (try_search(search_target)) return;
+
+                grid = grid.flip();
+                if (try_search(search_target)) return;
+
+                grid = grid.rotate();
+                if (try_search(search_target)) return;
+
+                grid = grid.rotate();
+                if (try_search(search_target)) return;
+
+                grid = grid.rotate();
+                if (try_search(search_target)) return;
+            }
+
+            public int get_untargeted_count()
+            {
+                return grid.Aggregate(0, (sum, grid_row) => sum + grid_row.Aggregate(0, (sum, grid_position) => sum + (grid_position == e_grid_value.on ? 1 : 0)));
             }
 
             public void display()
             {
-                for (int row = 0; row < grid.Length; row++)
-                {
-                    for (int column = 0; column < grid[row].Length; column++)
-                    {
-                        if (grid[row][column])
-                        {
-                            Console.Write("#");
-                        }
-                        else
-                        {
-                            Console.Write(".");
-                        }
-                    }
-
-                    Console.WriteLine();
-                }
+                grid.display(value => value.display());
             }
         }
 
@@ -420,19 +473,19 @@ namespace advent_of_code_2020.Days
                 }
             }
 
-            tiles[8].align_neighbors();
+            tiles[0].align_neighbors();
 
             c_combined_tile combined_tile = new c_combined_tile(tiles[0]);
 
             combined_tile.display();
 
-            c_search_target search_target = new c_search_target();
+            combined_tile.search_for(new c_sea_monster_search_target());
 
-            combined_tile.search_for(search_target);
+            combined_tile.display();
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine();
-            Console.WriteLine("Result = {0}", 0);
+            Console.WriteLine("Result = {0}", combined_tile.get_untargeted_count());
             Console.ResetColor();
         }
     }

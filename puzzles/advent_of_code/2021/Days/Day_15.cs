@@ -1,4 +1,5 @@
-﻿using System;
+﻿using advent_of_code_common.display_helpers;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -179,28 +180,26 @@ namespace advent_of_code_2021.Days
             Console.ResetColor();
         }
 
-        // https://www.fileformat.info/info/unicode/block/box_drawing/images.htm
+        internal static char k_map_icon_left_and_right = special_characters.k_box_icon_left_and_right;
+        internal static char k_map_icon_up_and_down = special_characters.k_box_icon_up_and_down;
 
-        internal static char k_map_icon_left_and_right = '\u2500';
-        internal static char k_map_icon_up_and_down = '\u2502';
+        internal static char k_map_icon_down_and_right = special_characters.k_box_icon_down_and_right;
+        internal static char k_map_icon_down_and_left = special_characters.k_box_icon_down_and_left;
+        internal static char k_map_icon_up_and_right = special_characters.k_box_icon_up_and_right;
+        internal static char k_map_icon_up_and_left = special_characters.k_box_icon_up_and_left;
 
-        internal static char k_map_icon_down_and_right = '\u250C';
-        internal static char k_map_icon_down_and_left = '\u2510';
-        internal static char k_map_icon_up_and_right = '\u2514';
-        internal static char k_map_icon_up_and_left = '\u2518';
+        internal static char k_map_icon_all_but_up = special_characters.k_box_icon_all_but_up;
+        internal static char k_map_icon_all_but_down = special_characters.k_box_icon_all_but_down;
+        internal static char k_map_icon_all_but_left = special_characters.k_box_icon_all_but_left;
+        internal static char k_map_icon_all_but_right = special_characters.k_box_icon_all_but_right;
 
-        internal static char k_map_icon_all_but_up = '\u252C';
-        internal static char k_map_icon_all_but_down = '\u2534';
-        internal static char k_map_icon_all_but_left = '\u251C';
-        internal static char k_map_icon_all_but_right = '\u2524';
+        internal static char k_map_icon_up = special_characters.k_box_icon_up;
+        internal static char k_map_icon_down = special_characters.k_box_icon_down;
+        internal static char k_map_icon_left = special_characters.k_box_icon_left;
+        internal static char k_map_icon_right = special_characters.k_box_icon_right;
 
-        internal static char k_map_icon_up = '\u2575';
-        internal static char k_map_icon_down = '\u2577';
-        internal static char k_map_icon_left = '\u2574';
-        internal static char k_map_icon_right = '\u2576';
-
-        internal static char k_map_icon_all_four = '\u253C';
-        internal static char k_map_icon_empty = ' ';
+        internal static char k_map_icon_all_four = special_characters.k_box_icon_all_four;
+        internal static char k_map_icon_empty = special_characters.k_box_icon_none;
 
         internal static char k_map_icon_endpoint = 'O';
 

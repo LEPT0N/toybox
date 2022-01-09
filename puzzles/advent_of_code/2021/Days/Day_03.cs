@@ -1,4 +1,5 @@
-﻿using System;
+﻿using advent_of_code_common.extensions;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,16 +9,6 @@ namespace advent_of_code_2021.Days
 {
     public static class extension_utilities
     {
-        public static bool test_bit(this int bit_field, int index)
-        {
-            return (0 != (bit_field & (1 << index)));
-        }
-
-        public static void set_bit(ref this int bit_field, int index)
-        {
-            bit_field |= (1 << index);
-        }
-
         public static int count_bits(this List<int> bit_fields, int index)
         {
             int total = 0;
