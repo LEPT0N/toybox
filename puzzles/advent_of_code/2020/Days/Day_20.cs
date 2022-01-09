@@ -16,10 +16,10 @@ namespace advent_of_code_2020.Days
             private bool[,] grid = new bool[10, 10];
             private int[] edge_ids = new int[8];
 
-            private c_tile top_neighbor = null;
-            private c_tile left_neighbor = null;
-            private c_tile right_neighbor = null;
-            private c_tile bottom_neighbor = null;
+            public c_tile top_neighbor { get; private set; } = null;
+            public c_tile left_neighbor { get; private set; } = null;
+            public c_tile right_neighbor { get; private set; } = null;
+            public c_tile bottom_neighbor { get; private set; } = null;
 
             static readonly private ((int, int), (int, int))[] k_edge_traverals =
             {
@@ -53,6 +53,11 @@ namespace advent_of_code_2020.Days
                 if (bottom_neighbor != null) unaligned_neighbors--;
 
                 return unaligned_neighbors;
+            }
+
+            public bool get_grid_position(int row, int column)
+            {
+                return grid[row, column];
             }
 
             public c_tile(c_input_reader input_reader)
@@ -238,6 +243,121 @@ namespace advent_of_code_2020.Days
             }
         }
 
+        internal class c_search_target
+        {
+            public readonly (int, int)[] positions;
+            public readonly int max_row;
+            public readonly int max_column;
+
+            public c_search_target()
+            {
+                List<(int, int)> positions_list = new List<(int, int)>();
+
+                //             1111111111
+                //   01234567890123456789
+                // 0                   # 
+                // 1 #    ##    ##    ###
+                // 2  #  #  #  #  #  #   
+
+                positions_list.Add((0, 18));
+
+                positions_list.Add((1, 0));
+                positions_list.Add((1, 5));
+                positions_list.Add((1, 6));
+                positions_list.Add((1, 11));
+                positions_list.Add((1, 12));
+                positions_list.Add((1, 17));
+                positions_list.Add((1, 18));
+                positions_list.Add((1, 19));
+
+                positions_list.Add((2, 1));
+                positions_list.Add((2, 4));
+                positions_list.Add((2, 7));
+                positions_list.Add((2, 10));
+                positions_list.Add((2, 13));
+                positions_list.Add((2, 16));
+
+                positions = positions_list.ToArray();
+
+                max_row = 2;
+                max_column = 19;
+            }
+        }
+
+        internal class c_combined_tile
+        {
+            private bool[][] grid;
+
+            public c_combined_tile(c_tile source)
+            {
+                // go to the top left
+                while (source.top_neighbor != null)
+                {
+                    source = source.top_neighbor;
+                }
+                while (source.left_neighbor != null)
+                {
+                    source = source.left_neighbor;
+                }
+
+                List<bool[]> grid_list = new List<bool[]>();
+
+                // Loop through each row of tiles
+                for (c_tile row_start_tile = source;
+                    row_start_tile != null;
+                    row_start_tile = row_start_tile.bottom_neighbor)
+                {
+                    // In each row of tiles, loop through each row of grid positions
+                    for (int row = 1; row < 9; row++)
+                    {
+                        List<bool> grid_row = new List<bool>();
+
+                        // Loop through each tile in this row of tiles
+                        for (c_tile current = row_start_tile;
+                            current != null;
+                            current = current.right_neighbor)
+                        {
+                            // In each tile, loop through each column of grid positions
+                            for (int column = 1; column < 9; column++)
+                            {
+                                grid_row.Add(current.get_grid_position(row, column));
+                            }
+                        }
+
+                        grid_list.Add(grid_row.ToArray());
+                    }
+
+                }
+
+                grid = grid_list.ToArray();
+            }
+
+            public void search_for(c_search_target search_target)
+            {
+                return; // TODO
+            }
+
+            public void display()
+            {
+                for (int row = 0; row < grid.Length; row++)
+                {
+                    for (int column = 0; column < grid[row].Length; column++)
+                    {
+                        if (grid[row][column])
+                        {
+                            Console.Write("#");
+                        }
+                        else
+                        {
+                            Console.Write(".");
+                        }
+                    }
+
+                    Console.WriteLine();
+                }
+            }
+        }
+
         internal static c_tile[] parse_input(
             in string input,
             in bool pretty)
@@ -300,7 +420,15 @@ namespace advent_of_code_2020.Days
                 }
             }
 
-            tiles[0].align_neighbors();
+            tiles[8].align_neighbors();
+
+            c_combined_tile combined_tile = new c_combined_tile(tiles[0]);
+
+            combined_tile.display();
+
+            c_search_target search_target = new c_search_target();
+
+            combined_tile.search_for(search_target);
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine();
