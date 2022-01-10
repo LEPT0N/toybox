@@ -137,8 +137,11 @@ namespace advent_of_code_2021.Days
                 {
                     if (line_corrupt)
                     {
-                        Console.ForegroundColor = ConsoleColor.DarkGray;
-                        Console.Write(input_char);
+                        if (pretty)
+                        {
+                            Console.ForegroundColor = ConsoleColor.DarkGray;
+                            Console.Write(input_char);
+                        }
 
                         continue;
                     }
@@ -150,11 +153,8 @@ namespace advent_of_code_2021.Days
                     {
                         chunks.Push(new c_chunk(input_char));
 
-                        if (pretty)
-                        {
-                            Console.ForegroundColor = ConsoleColor.Gray;
-                            Console.Write(input_char);
-                        }
+                        Console.ForegroundColor = ConsoleColor.Gray;
+                        Console.Write(input_char);
                     }
                     else
                     {
@@ -171,12 +171,17 @@ namespace advent_of_code_2021.Days
                             {
                                 Console.ForegroundColor = ConsoleColor.Red;
                                 Console.WriteLine(
-                                    "Corrupt line. Expected {0}, but found {1} instead.",
+                                    " Corrupt line. Expected {0}, but found {1} instead.",
                                     chunk.end_char,
                                     input_char);
                             }
 
                             line_corrupt = true;
+                        }
+                        else
+                        {
+                            Console.ForegroundColor = ConsoleColor.Gray;
+                            Console.Write(input_char);
                         }
                     }
                 }
@@ -207,7 +212,7 @@ namespace advent_of_code_2021.Days
                         {
                             Console.ForegroundColor = ConsoleColor.Yellow;
                             Console.WriteLine(
-                                "Incomplete line. Complete by adding {0}. ({1} points)",
+                                " Incomplete line. Complete by adding {0}. ({1} points)",
                                 completion,
                                 score);
                         }
@@ -216,8 +221,11 @@ namespace advent_of_code_2021.Days
                     }
                     else
                     {
-                        Console.ForegroundColor = ConsoleColor.Gray;
-                        Console.WriteLine("Line valid.");
+                        if (!pretty)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Green;
+                            Console.WriteLine(" Line valid.");
+                        }
                     }
                 }
 
