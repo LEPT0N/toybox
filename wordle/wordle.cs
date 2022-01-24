@@ -77,6 +77,8 @@ namespace wordle
     internal class c_dictionary
     {
         private List<string> m_words;
+        private int[] m_letter_counts;
+
         public int word_count { get { return m_words.Count; } }
 
         public c_dictionary(string input_file)
@@ -87,21 +89,65 @@ namespace wordle
             {
                 if (word.Length == wordle.k_word_length)
                 {
-                    m_words.Add(word);
+                    string lowercase_word = word.ToLower();
+
+                    if (word.All(letter => letter >= 'a' && letter <= 'z'))
+                    {
+                        m_words.Add(word.ToLower());
+                    }
                 }
             }
+
+            calculate_letter_counts();
         }
 
         private c_dictionary(List<string> words)
         {
             m_words = words;
+
+            calculate_letter_counts();
+        }
+
+        private void calculate_letter_counts()
+        {
+            m_letter_counts = new int[26];
+
+            foreach (string word in m_words)
+            {
+                foreach (char letter in word)
+                {
+                    m_letter_counts[letter - 'a']++;
+                }
+            }
+        }
+
+        private int score_word(string word)
+        {
+            int score = 0;
+
+            bool[] letters_used = new bool[26];
+
+            foreach (char letter in word)
+            {
+                letters_used[letter - 'a'] = true;
+            }
+
+            for (int i = 0; i < letters_used.Length; i++)
+            {
+                if (letters_used[i])
+                {
+                    score += m_letter_counts[i];
+                }
+            }
+
+            return score;
         }
 
         public void write_clues()
         {
             Console.WriteLine("Some Possibilities:");
 
-            foreach (string word in m_words.Take(3))
+            foreach (string word in m_words.OrderByDescending(x => score_word(x)).Take(3))
             {
                 Console.WriteLine("    {0}", word);
             }
@@ -182,6 +228,9 @@ namespace wordle
 
             while(true)
             {
+                possibilities.write_clues();
+                Console.WriteLine();
+
                 Console.Write("Input guess and result: ");
                 string guess_input = Console.ReadLine();
 
@@ -192,8 +241,6 @@ namespace wordle
                 Console.WriteLine();
                 guess.write_line();
                 Console.WriteLine("Dictionary Size = {0}", possibilities.word_count);
-                possibilities.write_clues();
-                Console.WriteLine();
             }
         }
     }
