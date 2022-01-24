@@ -83,6 +83,8 @@ namespace wordle
 
         public c_dictionary(string input_file)
         {
+            // https://github.com/dwyl/english-words/
+
             m_words = new List<string>();
 
             foreach (string word in File.ReadAllLines(input_file))

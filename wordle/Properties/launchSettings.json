@@ -1,8 +1,8 @@
 {
   "profiles": {
     "wordle": {
-      "commandName": "Project",
-      "commandLineArgs": "C:\\Users\\DanMi\\Documents\\toybox\\wordle\\Dictionary.txt"
+        "commandName": "Project",
+        "commandLineArgs": "C:\\Users\\DanMi\\Documents\\external\\english_words\\words.txt"
     }
   }
 }
