@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 
@@ -93,9 +94,9 @@ namespace wordle
                 {
                     string lowercase_word = word.ToLower();
 
-                    if (word.All(letter => letter >= 'a' && letter <= 'z'))
+                    if (lowercase_word.All(letter => letter >= 'a' && letter <= 'z'))
                     {
-                        m_words.Add(word.ToLower());
+                        m_words.Add(lowercase_word);
                     }
                 }
             }
@@ -198,7 +199,7 @@ namespace wordle
                          *  ratty
                          *  rotor
                          */
-                        
+
                         break;
 
                     default:
