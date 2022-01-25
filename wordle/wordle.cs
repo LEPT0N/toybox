@@ -51,6 +51,7 @@ namespace wordle
             {
                 Console.ResetColor();
                 Console.Write(" ");
+                Console.ForegroundColor = ConsoleColor.White;
 
                 switch (feedback[i])
                 {
@@ -222,28 +223,44 @@ namespace wordle
             Console.WriteLine("W O R D L E");
             Console.WriteLine();
 
-            c_dictionary dictionary = new c_dictionary(args[0]);
+            c_dictionary possibilities = new c_dictionary(args[0]);
 
-            Console.WriteLine("Dictionary Size = {0}", dictionary.word_count);
-            Console.WriteLine();
-
-            c_dictionary possibilities = dictionary;
-
-            while(true)
+            while(possibilities.word_count > 1)
             {
+                Console.WriteLine("Dictionary Size = {0}", possibilities.word_count);
                 possibilities.write_clues();
                 Console.WriteLine();
 
-                Console.Write("Input guess and result: ");
-                string guess_input = Console.ReadLine();
+                c_guess guess = null;
 
-                c_guess guess = new c_guess(guess_input);
+                while (guess == null)
+                {
+                    Console.Write("Input guess and result: ");
+
+                    try
+                    {
+                        string guess_input = Console.ReadLine();
+                        guess = new c_guess(guess_input);
+                    }
+                    catch (Exception)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("    Error - unable to parse input");
+                        Console.ResetColor();
+                    }
+                }
+
+                guess.write_line();
 
                 possibilities = possibilities.apply(guess);
+            }
 
+            if (possibilities.word_count == 0)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine();
-                guess.write_line();
-                Console.WriteLine("Dictionary Size = {0}", possibilities.word_count);
+                Console.WriteLine("Error - no possibilities remaining");
+                Console.ResetColor();
             }
         }
     }
