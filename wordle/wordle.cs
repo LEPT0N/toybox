@@ -47,6 +47,8 @@ namespace wordle
 
         public void write_line()
         {
+            Console.Write("[");
+
             for (int i = 0; i < wordle.k_word_length; i++)
             {
                 Console.ResetColor();
@@ -72,6 +74,7 @@ namespace wordle
             }
 
             Console.ResetColor();
+            Console.Write(" ]");
             Console.WriteLine();
         }
     }
@@ -147,14 +150,16 @@ namespace wordle
             return score;
         }
 
-        public void write_clues()
+        public void write_clues(string title)
         {
-            Console.WriteLine("Some Possibilities:");
+            Console.WriteLine(title);
 
             foreach (string word in m_words.OrderByDescending(x => score_word(x)).Take(3))
             {
                 Console.WriteLine("    {0}", word);
             }
+
+            Console.WriteLine();
         }
 
         public c_dictionary apply(c_guess guess)
@@ -228,8 +233,7 @@ namespace wordle
             while(possibilities.word_count > 1)
             {
                 Console.WriteLine("Dictionary Size = {0}", possibilities.word_count);
-                possibilities.write_clues();
-                Console.WriteLine();
+                possibilities.write_clues("Some Possibilities:");
 
                 c_guess guess = null;
 
@@ -261,6 +265,10 @@ namespace wordle
                 Console.WriteLine();
                 Console.WriteLine("Error - no possibilities remaining");
                 Console.ResetColor();
+            }
+            else
+            {
+                possibilities.write_clues("Solution:");
             }
         }
     }
