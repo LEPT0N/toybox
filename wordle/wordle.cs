@@ -6,43 +6,177 @@ using System.Linq;
 
 namespace wordle
 {
-    internal enum e_feedback
+    internal enum e_feedback_color
     {
-        correct_spot,
-        wrong_spot,
-        no_spot,
+        green,
+        yellow,
+        gray,
+    }
+
+    [DebuggerDisplay("{letter} {number}", Type = "s_letter_number_pair")]
+    internal struct s_letter_number_pair
+    {
+        public readonly char letter;
+        public readonly int number;
+
+        public s_letter_number_pair(char l, int n)
+        {
+            letter = l;
+            number = n;
+        }
+    }
+
+    [DebuggerDisplay("{letter} = {color}", Type = "s_feedback")]
+    internal struct s_feedback
+    {
+        public readonly char letter;
+        public readonly e_feedback_color color;
+
+        public s_feedback(char l, e_feedback_color c)
+        {
+            letter = l;
+            color = c;
+        }
     }
 
     internal class c_guess
     {
-        public string word;
-        public e_feedback[] feedback;
+        // Direct parsing of the input
+        private readonly s_feedback[] feedback;
+
+        // required_letters[n] == 'x' -> word[n] == 'x'
+        private readonly s_letter_number_pair[] required_letters;
+
+        // banned_letters[n] == 'x' -> word[n] != 'x'
+        private readonly s_letter_number_pair[] banned_letters;
+
+        // required_letter_counts[n] == 'x' -> word.Count('x') == n
+        private readonly s_letter_number_pair[] required_letter_counts;
+
+        // required_letter_counts[n] == 'x' -> word.Count('x') >= n
+        private readonly s_letter_number_pair[] minimum_letter_counts;
 
         public c_guess(string input)
         {
-            string[] split_input_line = input.Split(" = ");
-
-            word = split_input_line[0];
-            feedback = split_input_line[1].Split(" ").Select(x => string_to_feedback(x)).ToArray();
-
-            if (word.Length != wordle.k_word_length || feedback.Length != wordle.k_word_length)
             {
-                throw new Exception(String.Format(
-                    "Guess requires a word with {0} characters, and {0} feedback items",
-                    wordle.k_word_length));
+                string[] split_input_line = input.Split(" = ");
+
+                string word = split_input_line[0];
+                e_feedback_color[] feedback_colors = split_input_line[1].Split(" ").Select(x => string_to_feedback_color(x)).ToArray();
+
+                if (word.Length != wordle.k_word_length || feedback_colors.Length != wordle.k_word_length)
+                {
+                    throw new Exception(String.Format(
+                        "Guess requires a word with {0} characters, and {0} feedback items",
+                        wordle.k_word_length));
+                }
+
+                feedback = word.Zip(feedback_colors, (letter, color) => new s_feedback(letter, color)).ToArray();
             }
+
+            List<s_letter_number_pair> required_letters_list = new List<s_letter_number_pair>();
+            List<s_letter_number_pair> banned_letters_list = new List<s_letter_number_pair>();
+            List<s_letter_number_pair> required_letter_counts_list = new List<s_letter_number_pair>();
+            List<s_letter_number_pair> minimum_letter_counts_list = new List<s_letter_number_pair>();
+
+            for (int i = 0; i < wordle.k_word_length; i++)
+            {
+                switch (feedback[i].color)
+                {
+                    case e_feedback_color.green:
+                        {
+                            // green letter 'x' => word[n] == 'x'
+                            required_letters_list.Add(new s_letter_number_pair(feedback[i].letter, i));
+                        }
+                        break;
+
+                    case e_feedback_color.yellow:
+                        {
+                            int non_gray_letter_count = feedback.Where(f => f.letter == feedback[i].letter && f.color != e_feedback_color.gray).Count();
+
+                            // yellow letter 'x' => word.Count('x') >= feedback.Count(green, 'x') + feedback.Count(yellow, 'x')
+                            minimum_letter_counts_list.Add(new s_letter_number_pair(feedback[i].letter, non_gray_letter_count));
+
+                            // yellow letter 'x' => word[n] != 'x'
+                            banned_letters_list.Add(new s_letter_number_pair(feedback[i].letter, i));
+                        }
+                        break;
+
+                    case e_feedback_color.gray:
+                        {
+                            int non_gray_letter_count = feedback.Where(f => f.letter == feedback[i].letter && f.color != e_feedback_color.gray).Count();
+
+                            // gray letter 'x' => word.Count('x') == feedback.Count(green, 'x') + feedback.Count(yellow, 'x')
+                            required_letter_counts_list.Add(new s_letter_number_pair(feedback[i].letter, non_gray_letter_count));
+
+                            if (non_gray_letter_count > 0)
+                            {
+                                // gray letter 'x' => word[n] != 'x'
+                                banned_letters_list.Add(new s_letter_number_pair(feedback[i].letter, i));
+                            }
+                        }
+                        break;
+                }
+            }
+
+            required_letters = required_letters_list.ToArray();
+            banned_letters = banned_letters_list.ToArray();
+
+            required_letter_counts = required_letter_counts_list.ToArray();
+            minimum_letter_counts = minimum_letter_counts_list.ToArray();
         }
 
-        private static e_feedback string_to_feedback(string input)
+        public bool matches(string word)
+        {
+            // word[n] == 'x'
+            foreach (s_letter_number_pair required_letter in required_letters)
+            {
+                if (word[required_letter.number] != required_letter.letter)
+                {
+                    return false;
+                }
+            }
+
+            // word[n] != 'x'
+            foreach (s_letter_number_pair banned_letter in banned_letters)
+            {
+                if (word[banned_letter.number] == banned_letter.letter)
+                {
+                    return false;
+                }
+            }
+
+            // word.Count('x') == n
+            foreach (s_letter_number_pair required_letter_count in required_letter_counts)
+            {
+                if (word.Count(letter => letter == required_letter_count.letter) != required_letter_count.number)
+                {
+                    return false;
+                }
+            }
+
+            // word.Count('x') >= n
+            foreach (s_letter_number_pair minimum_letter_count in minimum_letter_counts)
+            {
+                if (word.Count(letter => letter == minimum_letter_count.letter) < minimum_letter_count.number)
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        private static e_feedback_color string_to_feedback_color(string input)
         {
             switch (input)
             {
-                case "green": return e_feedback.correct_spot;
-                case "yellow": return e_feedback.wrong_spot;
-                case "gray": return e_feedback.no_spot;
+                case "green": return e_feedback_color.green;
+                case "yellow": return e_feedback_color.yellow;
+                case "gray": return e_feedback_color.gray;
             }
 
-            throw new Exception(String.Format("Unknown feedback '{0}'", input));
+            throw new Exception(String.Format("Unknown feedback color '{0}'", input));
         }
 
         public void write_line()
@@ -55,22 +189,22 @@ namespace wordle
                 Console.Write(" ");
                 Console.ForegroundColor = ConsoleColor.White;
 
-                switch (feedback[i])
+                switch (feedback[i].color)
                 {
-                    case e_feedback.correct_spot:
+                    case e_feedback_color.green:
                         Console.BackgroundColor = ConsoleColor.DarkGreen;
                         break;
 
-                    case e_feedback.wrong_spot:
+                    case e_feedback_color.yellow:
                         Console.BackgroundColor = ConsoleColor.DarkYellow;
                         break;
 
-                    case e_feedback.no_spot:
+                    case e_feedback_color.gray:
                         Console.BackgroundColor = ConsoleColor.DarkGray;
                         break;
                 }
 
-                Console.Write(word[i]);
+                Console.Write(feedback[i].letter);
             }
 
             Console.ResetColor();
@@ -164,58 +298,9 @@ namespace wordle
 
         public c_dictionary apply(c_guess guess)
         {
-            IEnumerable<string> words = m_words;
+            List<string> filtered_words = m_words.Where(word => guess.matches(word)).ToList();
 
-            for (int i = 0; i < guess.word.Length; i++)
-            {
-                IEnumerable<string> filtered_words;
-
-                switch (guess.feedback[i])
-                {
-                    case e_feedback.correct_spot:
-                        filtered_words = words.Where(word => word[i] == guess.word[i]).ToList();
-                        break;
-
-                    case e_feedback.wrong_spot:
-                        filtered_words = words.Where(word =>
-                            word[i] != guess.word[i] &&
-                            word.Any(letter => letter == guess.word[i])).ToList();
-                        break;
-
-                    case e_feedback.no_spot:
-                        filtered_words = words.Where(word => !word.Any(letter => letter == guess.word[i])).ToList();
-                        /* TODO BUG:
-                         *  solution = robot
-                         *  guess = ratty
-                         *  feedback = green, gray, yellow, gray, gray
-                         *  
-                         *  note the second 't' is gray. My filter would exclude all letters with 't' in them,
-                         *  when in fact I need to only exclude words with a SECOND 't' in them.
-                         *  
-                         *  similarly:
-                         *  solution = robot
-                         *  guess = rotor
-                         *  feedback = green, green, yellow, green, gray.
-                         *  
-                         *  The second 'r' is commenting on a second 'r' in the word, not the lack of any 'r'.
-                         *  
-                         *  Fun guesses for 'robot':
-                         *  riped
-                         *  rucks
-                         *  ratty
-                         *  rotor
-                         */
-
-                        break;
-
-                    default:
-                        throw new Exception("unexpected");
-                }
-
-                words = filtered_words;
-            }
-
-            return new c_dictionary(words.ToList());
+            return new c_dictionary(filtered_words);
         }
     }
 
