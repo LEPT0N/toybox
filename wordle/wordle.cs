@@ -167,17 +167,19 @@ namespace wordle
             return true;
         }
 
-        private static e_feedback_color string_to_feedback_color(string input)
+        private static e_feedback_color string_to_feedback_color(string input) => input switch
         {
-            switch (input)
-            {
-                case "green": return e_feedback_color.green;
-                case "yellow": return e_feedback_color.yellow;
-                case "gray": return e_feedback_color.gray;
-            }
+            "green" => e_feedback_color.green,
+            "g" => e_feedback_color.green,
 
-            throw new Exception(String.Format("Unknown feedback color '{0}'", input));
-        }
+            "yellow" => e_feedback_color.yellow,
+            "y" => e_feedback_color.yellow,
+
+            "gray" => e_feedback_color.gray,
+            "b" => e_feedback_color.gray,
+
+            _ => throw new Exception(String.Format("Unknown feedback color '{0}'", input))
+        };
 
         public void write_line()
         {
