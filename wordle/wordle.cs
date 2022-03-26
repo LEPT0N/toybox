@@ -290,9 +290,9 @@ namespace wordle
         {
             Console.WriteLine(title);
 
-            foreach (string word in m_words.OrderByDescending(x => score_word(x)).Take(3))
+            foreach (string word in m_words.OrderByDescending(x => score_word(x)).Take(5))
             {
-                Console.WriteLine("    {0}", word);
+                Console.WriteLine("    {0} [{1}]", word, score_word(word));
             }
 
             Console.WriteLine();
