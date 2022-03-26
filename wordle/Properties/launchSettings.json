@@ -2,7 +2,7 @@
   "profiles": {
     "wordle": {
         "commandName": "Project",
-        "commandLineArgs": "C:\\Users\\DanMi\\Documents\\external\\english_words\\words.txt"
+        "commandLineArgs": "C:\\Users\\DanMi\\Documents\\toybox\\wordle\\valid_answers.txt"
     }
   }
 }
