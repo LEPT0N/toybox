@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace wordle
 {
@@ -45,16 +47,59 @@ namespace wordle
         private readonly s_feedback[] feedback;
 
         // required_letters[n] == 'x' -> word[n] == 'x'
-        private readonly s_letter_number_pair[] required_letters;
+        private s_letter_number_pair[] required_letters;
 
         // banned_letters[n] == 'x' -> word[n] != 'x'
-        private readonly s_letter_number_pair[] banned_letters;
+        private s_letter_number_pair[] banned_letters;
 
         // required_letter_counts[n] == 'x' -> word.Count('x') == n
-        private readonly s_letter_number_pair[] required_letter_counts;
+        private s_letter_number_pair[] required_letter_counts;
 
         // required_letter_counts[n] == 'x' -> word.Count('x') >= n
-        private readonly s_letter_number_pair[] minimum_letter_counts;
+        private s_letter_number_pair[] minimum_letter_counts;
+
+        public c_guess(string guess, string answer)
+		{
+            if (guess.Length != wordle.k_word_length || answer.Length != wordle.k_word_length)
+            {
+                throw new Exception(String.Format(
+                    "Guesses and answers must be {0} characters long",
+                    wordle.k_word_length));
+            }
+
+            feedback = new s_feedback[wordle.k_word_length];
+            
+            for (int i = 0; i < wordle.k_word_length; i++)
+			{
+                if (guess[i] == answer[i])
+				{
+                    feedback[i] = new s_feedback(guess[i], e_feedback_color.green);
+				}
+			}
+            
+            for (int i = 0; i < wordle.k_word_length; i++)
+			{
+                e_feedback_color feedback_color;
+
+                if (guess[i] == answer[i])
+				{
+                    continue;
+				}
+                else if (feedback.Count(feedback_item => feedback_item.letter == guess[i])
+                    < answer.Count(answer_character => answer_character == guess[i]))
+				{
+                    feedback_color = e_feedback_color.yellow;
+				}
+                else
+				{
+                    feedback_color = e_feedback_color.gray;
+				}
+
+                feedback[i] = new s_feedback(guess[i], feedback_color);
+			}
+
+            parse_feedback();
+		}
 
         public c_guess(string input)
         {
@@ -74,6 +119,11 @@ namespace wordle
                 feedback = word.Zip(feedback_colors, (letter, color) => new s_feedback(letter, color)).ToArray();
             }
 
+            parse_feedback();
+        }
+
+        private void parse_feedback()
+        {
             List<s_letter_number_pair> required_letters_list = new List<s_letter_number_pair>();
             List<s_letter_number_pair> banned_letters_list = new List<s_letter_number_pair>();
             List<s_letter_number_pair> required_letter_counts_list = new List<s_letter_number_pair>();
@@ -125,6 +175,32 @@ namespace wordle
             required_letter_counts = required_letter_counts_list.ToArray();
             minimum_letter_counts = minimum_letter_counts_list.ToArray();
         }
+
+        public UInt64 encode()
+		{
+            UInt64 result = 0;
+            UInt64 mult = 1;
+
+            foreach (s_feedback feedback_item in feedback)
+			{
+                switch (feedback_item.color)
+				{
+                    case e_feedback_color.green:
+                        result += mult;
+                        break;
+                    case e_feedback_color.yellow:
+                        result += mult * 2;
+                        break;
+                    case e_feedback_color.gray:
+                        result += mult * 4;
+                        break;
+				}
+
+                mult *= 8;
+			}
+
+            return result;
+		}
 
         public bool matches(string word)
         {
@@ -306,14 +382,282 @@ namespace wordle
         }
     }
 
+    internal class c_answer_list
+	{
+        private List<string> m_answers;
+
+        public int count()
+		{
+            return m_answers.Count;
+		}
+
+        public c_answer_list(string input_file)
+        {
+            m_answers = new List<string>();
+
+            foreach (string word in File.ReadAllLines(input_file))
+            {
+                if (word.Length == wordle.k_word_length)
+                {
+                    string lowercase_word = word.ToLower();
+
+                    if (lowercase_word.All(letter => letter >= 'a' && letter <= 'z'))
+                    {
+                        m_answers.Add(lowercase_word);
+                    }
+                }
+            }
+        }
+
+        public int score_hint(string hint)
+		{
+            // For each potential answer, See how small the answer list would become for a given hint.
+            // Score the hint based on the largest (worst-case) resulting answers list.
+
+            int max_score = -1;
+
+            HashSet<UInt64> guesses = new HashSet<UInt64>();
+
+            // Find the score for each potential answer being the real answer.
+            foreach (string answer in m_answers)
+			{
+                c_guess guess = new c_guess(hint, answer);
+             
+                // Optimization: If two hint/answer pairs produce the same feedback, only do work once.
+                UInt64 guess_encoded = guess.encode();
+                if (!guesses.Contains(guess_encoded))
+                {
+                    guesses.Add(guess_encoded);
+
+                    // See how big the resulting answers list would be.
+                    int score = m_answers.Count(word => guess.matches(word));
+
+                    // Debug-friendly score computation
+                    // List<string> matches = m_answers.Where(word => guess.matches(word)).ToList();
+                    // int score = matches.Count();
+
+                    // record the largest score.
+                    if (score > max_score || (score > 0 && max_score == -1))
+				    {
+                        max_score = score;
+				    }
+                }
+			}
+
+            if (max_score == -1)
+			{
+                max_score = int.MaxValue;
+			}
+
+            return max_score;
+		}
+
+        public void apply(c_guess guess)
+        {
+            m_answers = m_answers.Where(word => guess.matches(word)).ToList();
+        }
+
+        public void print_solution()
+		{
+            Console.WriteLine("    {0}", m_answers.First());
+		}
+	}
+
+    internal class c_hint_list
+	{
+        private class c_hint
+		{
+            public string m_hint;
+            public int m_score;
+
+            public c_hint(string hint, int score)
+			{
+                m_hint = hint;
+                m_score = score;
+			}
+		}
+
+        private List<c_hint> m_hints;
+
+        public c_hint_list(string input_file)
+        {
+            m_hints = new List<c_hint>();
+
+            foreach (string word in File.ReadAllLines(input_file))
+            {
+                if (word.Length == wordle.k_word_length)
+                {
+                    string lowercase_word = word.ToLower();
+
+                    if (lowercase_word.All(letter => letter >= 'a' && letter <= 'z'))
+                    {
+                        m_hints.Add(new c_hint(lowercase_word, int.MaxValue));
+                    }
+                }
+            }
+        }
+
+        public void set_hint_score(string hint_string, int hint_score)
+		{
+            foreach (c_hint hint in m_hints)
+			{
+                if (hint.m_hint == hint_string)
+				{
+                    hint.m_score = hint_score;
+
+                    return;
+				}
+			}
+		}
+
+        public void score_hints(c_answer_list answers)
+		{
+            // Debug one score computation.
+            // foreach (c_hint hint in m_hints)
+			// {
+            //     if (hint.m_hint == "whump")
+			// 	{
+            //         hint.m_score = answers.score_hint(hint.m_hint);
+            // 
+            //         return;
+			// 	}
+			// }
+ 
+            // Score hints in parallel to speed things up.
+
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            ConcurrentQueue<c_hint> job_input = new ConcurrentQueue<c_hint>(m_hints);
+
+            Action score_worker = () =>
+			{
+                c_hint hint;
+                while (job_input.TryDequeue(out hint))
+				{
+                    hint.m_score = answers.score_hint(hint.m_hint);
+				}
+            };
+
+            Parallel.Invoke(score_worker, score_worker, score_worker, score_worker);
+
+            stopwatch.Stop();
+            Console.WriteLine("Time taken = {0}", stopwatch.Elapsed);
+		}
+
+        public void print_suggestions()
+		{
+            foreach (c_hint hint in m_hints.OrderBy(hint => hint.m_score).Take(5))
+            {
+                Console.WriteLine("    {0} [{1}]", hint.m_hint, hint.m_score);
+            }
+		}
+	}
+
+    internal class c_bot
+	{
+        c_hint_list m_hints;
+        c_answer_list m_answers;
+
+        public c_bot(string hints_input_file, string answers_input_file)
+		{
+            m_hints = new c_hint_list(hints_input_file);
+            m_answers = new c_answer_list(answers_input_file);
+
+            m_hints.set_hint_score("aesir", 168);
+            m_hints.set_hint_score("arise", 168);
+            m_hints.set_hint_score("raise", 168);
+            m_hints.set_hint_score("reais", 168);
+            m_hints.set_hint_score("serai", 168);
+
+            // Use this to generate the first set of suggestions instead.
+            // However seeing as how this takes about a minute and it's the same output each time,
+            // I'm just putting them above.
+            // m_hints.score_hints(m_answers);
+		}
+
+        public bool solved()
+		{
+            return m_answers.count() <= 1;
+		}
+
+        public void print_suggestions()
+		{
+            Console.WriteLine("Dictionary Size = {0}", m_answers.count());
+            Console.WriteLine("Some Possibilities:");
+
+            m_hints.print_suggestions();
+
+            Console.WriteLine();
+		}
+
+        public void print_solution()
+		{
+            Console.WriteLine("Solution:");
+
+            m_answers.print_solution();
+
+            Console.WriteLine();
+		}
+
+        public void apply(c_guess guess)
+        {
+            m_answers.apply(guess);
+
+            m_hints.score_hints(m_answers);
+        }
+	}
+
     internal class wordle
     {
         public static int k_word_length = 5;
+
+        private static void bot_plus_plus(string[] args)
+		{
+            c_bot bot = new c_bot(args[1], args[2]);
+
+            while(!bot.solved())
+            {
+                bot.print_suggestions();
+
+                c_guess guess = null;
+
+                while (guess == null)
+                {
+                    Console.Write("Input guess and result: ");
+
+                    try
+                    {
+                        string guess_input = Console.ReadLine();
+                        guess = new c_guess(guess_input);
+                    }
+                    catch (Exception)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine("    Error - unable to parse input");
+                        Console.ResetColor();
+                    }
+                }
+
+                guess.write_line();
+
+                bot.apply(guess);
+            }
+
+            bot.print_solution();
+		}
 
         static void Main(string[] args)
         {
             Console.WriteLine("W O R D L E");
             Console.WriteLine();
+
+            if (args[0] == "++")
+			{
+                bot_plus_plus(args);
+
+                return;
+			}
 
             c_dictionary possibilities = new c_dictionary(args[0]);
 
