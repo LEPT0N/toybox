@@ -1,0 +1,1 @@
+.\bin\Debug\net5.0\wordle.exe ++ .\valid_guesses.txt .\valid_answers.txt
