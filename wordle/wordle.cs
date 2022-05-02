@@ -618,12 +618,53 @@ namespace wordle
 		}
 	}
 
-    internal class c_bot
-	{
-        c_hint_list m_hints;
-        c_answer_list m_answers;
+    internal interface i_bot
+    {
+        public bool solved();
+        public void print_suggestions();
+        public void print_solution();
+        public void apply(c_guess guess);
+    }
 
-        public c_bot(string hints_input_file, string answers_input_file)
+    internal class c_bot_1 : i_bot
+    {
+        private c_dictionary m_possible_answers;
+
+        public c_bot_1(string answers_input_file)
+		{
+            m_possible_answers = new c_dictionary(answers_input_file);
+        }
+
+        public bool solved()
+        {
+            return m_possible_answers.word_count <= 1;
+        }
+
+        public void print_suggestions()
+		{
+            Console.WriteLine("Dictionary Size = {0}", m_possible_answers.word_count);
+            m_possible_answers.write_clues("Some Possibilities:");
+
+            Console.WriteLine();
+		}
+
+        public void print_solution()
+		{
+            m_possible_answers.write_clues("Solution:");
+		}
+
+        public void apply(c_guess guess)
+        {
+            m_possible_answers = m_possible_answers.apply(guess);
+        }
+    }
+
+    internal class c_bot_2 : i_bot
+	{
+        private c_hint_list m_hints;
+        private c_answer_list m_answers;
+
+        public c_bot_2(string hints_input_file, string answers_input_file)
 		{
             m_hints = new c_hint_list(hints_input_file);
             m_answers = new c_answer_list(answers_input_file);
@@ -676,10 +717,8 @@ namespace wordle
     {
         public static int k_word_length = 5;
 
-        private static void bot_plus_plus(string[] args)
+        private static void solve(i_bot bot)
 		{
-            c_bot bot = new c_bot(args[1], args[2]);
-
             while(!bot.solved())
             {
                 bot.print_suggestions();
@@ -716,55 +755,18 @@ namespace wordle
             Console.WriteLine("W O R D L E");
             Console.WriteLine();
 
+            i_bot bot;
+
             if (args[0] == "++")
 			{
-                bot_plus_plus(args);
-
-                return;
+                bot = new c_bot_2(args[1], args[2]);
 			}
-
-            c_dictionary possibilities = new c_dictionary(args[0]);
-
-            while(possibilities.word_count > 1)
-            {
-                Console.WriteLine("Dictionary Size = {0}", possibilities.word_count);
-                possibilities.write_clues("Some Possibilities:");
-
-                c_guess guess = null;
-
-                while (guess == null)
-                {
-                    Console.Write("Input guess and result: ");
-
-                    try
-                    {
-                        string guess_input = Console.ReadLine();
-                        guess = new c_guess(guess_input);
-                    }
-                    catch (Exception)
-                    {
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("    Error - unable to parse input");
-                        Console.ResetColor();
-                    }
-                }
-
-                guess.write_line();
-
-                possibilities = possibilities.apply(guess);
-            }
-
-            if (possibilities.word_count == 0)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine();
-                Console.WriteLine("Error - no possibilities remaining");
-                Console.ResetColor();
-            }
             else
             {
-                possibilities.write_clues("Solution:");
+                bot = new c_bot_1(args[0]);
             }
+
+            solve(bot);
         }
     }
 }
