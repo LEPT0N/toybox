@@ -1,8 +1,8 @@
 {
   "profiles": {
     "wordle": {
-        "commandName": "Project",
-        "commandLineArgs": "C:\\Users\\DanMi\\Documents\\toybox\\wordle\\valid_answers.txt"
+      "commandName": "Project",
+      "commandLineArgs": "++ C:\\Users\\DanMi\\Documents\\toybox\\wordle\\valid_guesses.txt C:\\Users\\DanMi\\Documents\\toybox\\wordle\\valid_answers.txt"
     }
   }
 }

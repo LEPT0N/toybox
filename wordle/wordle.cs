@@ -47,16 +47,16 @@ namespace wordle
         private readonly s_feedback[] feedback;
 
         // required_letters[n] == 'x' -> word[n] == 'x'
-        private s_letter_number_pair[] required_letters;
+        private readonly s_letter_number_pair[] required_letters;
 
         // banned_letters[n] == 'x' -> word[n] != 'x'
-        private s_letter_number_pair[] banned_letters;
+        private readonly s_letter_number_pair[] banned_letters;
 
         // required_letter_counts[n] == 'x' -> word.Count('x') == n
-        private s_letter_number_pair[] required_letter_counts;
+        private readonly s_letter_number_pair[] required_letter_counts;
 
         // required_letter_counts[n] == 'x' -> word.Count('x') >= n
-        private s_letter_number_pair[] minimum_letter_counts;
+        private readonly s_letter_number_pair[] minimum_letter_counts;
 
         public c_guess(string guess, string answer)
 		{
@@ -98,7 +98,12 @@ namespace wordle
                 feedback[i] = new s_feedback(guess[i], feedback_color);
 			}
 
-            parse_feedback();
+            parse_feedback(
+                feedback,
+                ref required_letters,
+                ref banned_letters,
+                ref required_letter_counts,
+                ref minimum_letter_counts);
 		}
 
         public c_guess(string input)
@@ -119,10 +124,20 @@ namespace wordle
                 feedback = word.Zip(feedback_colors, (letter, color) => new s_feedback(letter, color)).ToArray();
             }
 
-            parse_feedback();
+            parse_feedback(
+                feedback,
+                ref required_letters,
+                ref banned_letters,
+                ref required_letter_counts,
+                ref minimum_letter_counts);
         }
 
-        private void parse_feedback()
+        private static void parse_feedback(
+            s_feedback[] feedback,
+            ref s_letter_number_pair[] required_letters,
+            ref s_letter_number_pair[] banned_letters,
+            ref s_letter_number_pair[] required_letter_counts,
+            ref s_letter_number_pair[] minimum_letter_counts)
         {
             List<s_letter_number_pair> required_letters_list = new List<s_letter_number_pair>();
             List<s_letter_number_pair> banned_letters_list = new List<s_letter_number_pair>();
@@ -381,6 +396,42 @@ namespace wordle
             return new c_dictionary(filtered_words);
         }
     }
+    
+    [DebuggerDisplay("{worst_case}, {average_case}, {is_possible_answer}", Type = "s_hint_score")]
+    internal struct s_hint_score
+    {
+        public readonly int worst_case;
+        public readonly float average_case;
+        public readonly bool is_possible_answer;
+
+        public readonly static s_hint_score k_default = new s_hint_score(int.MaxValue, float.MaxValue, false);
+
+        public s_hint_score(int worst, float average, bool possible_answer)
+        {
+            worst_case = worst;
+            average_case = average;
+            is_possible_answer = possible_answer;
+        }
+    }
+
+    class c_hint_comparer : IComparer<s_hint_score>
+    {
+        public int Compare(s_hint_score a, s_hint_score b)
+        {
+            if (a.worst_case != b.worst_case)
+            {
+                return a.worst_case.CompareTo(b.worst_case);
+            }
+            else if (a.average_case != b.average_case)
+            {
+                return a.average_case.CompareTo(b.average_case);
+            }
+            else
+            {
+                return a.is_possible_answer.CompareTo(b.is_possible_answer);
+            }
+        }
+    }
 
     internal class c_answer_list
 	{
@@ -409,14 +460,15 @@ namespace wordle
             }
         }
 
-        public int score_hint(string hint)
+        public s_hint_score score_hint(string hint)
 		{
             // For each potential answer, See how small the answer list would become for a given hint.
             // Score the hint based on the largest (worst-case) resulting answers list.
 
             int max_score = -1;
+            float sum_score = 0;
 
-            HashSet<UInt64> guesses = new HashSet<UInt64>();
+            Dictionary<UInt64, int> guesses = new Dictionary<UInt64, int>();
 
             // Find the score for each potential answer being the real answer.
             foreach (string answer in m_answers)
@@ -425,10 +477,8 @@ namespace wordle
              
                 // Optimization: If two hint/answer pairs produce the same feedback, only do work once.
                 UInt64 guess_encoded = guess.encode();
-                if (!guesses.Contains(guess_encoded))
+                if (!guesses.ContainsKey(guess_encoded))
                 {
-                    guesses.Add(guess_encoded);
-
                     // See how big the resulting answers list would be.
                     int score = m_answers.Count(word => guess.matches(word));
 
@@ -436,11 +486,19 @@ namespace wordle
                     // List<string> matches = m_answers.Where(word => guess.matches(word)).ToList();
                     // int score = matches.Count();
 
+                    guesses.Add(guess_encoded, score);
+
                     // record the largest score.
                     if (score > max_score || (score > 0 && max_score == -1))
 				    {
                         max_score = score;
 				    }
+
+                    sum_score += score;
+                }
+                else
+                {
+                    sum_score += guesses[guess_encoded];
                 }
 			}
 
@@ -449,7 +507,9 @@ namespace wordle
                 max_score = int.MaxValue;
 			}
 
-            return max_score;
+            bool hint_is_possible_answer = m_answers.Contains(hint);
+
+            return new s_hint_score(max_score, sum_score / m_answers.Count, hint_is_possible_answer);
 		}
 
         public void apply(c_guess guess)
@@ -468,9 +528,9 @@ namespace wordle
         private class c_hint
 		{
             public string m_hint;
-            public int m_score;
+            public s_hint_score m_score;
 
-            public c_hint(string hint, int score)
+            public c_hint(string hint, s_hint_score score)
 			{
                 m_hint = hint;
                 m_score = score;
@@ -491,13 +551,13 @@ namespace wordle
 
                     if (lowercase_word.All(letter => letter >= 'a' && letter <= 'z'))
                     {
-                        m_hints.Add(new c_hint(lowercase_word, int.MaxValue));
+                        m_hints.Add(new c_hint(lowercase_word, s_hint_score.k_default));
                     }
                 }
             }
         }
 
-        public void set_hint_score(string hint_string, int hint_score)
+        public void set_hint_score(string hint_string, s_hint_score hint_score)
 		{
             foreach (c_hint hint in m_hints)
 			{
@@ -547,9 +607,13 @@ namespace wordle
 
         public void print_suggestions()
 		{
-            foreach (c_hint hint in m_hints.OrderBy(hint => hint.m_score).Take(5))
+            foreach (c_hint hint in m_hints.OrderBy(hint => hint.m_score, new c_hint_comparer()).Take(5))
             {
-                Console.WriteLine("    {0} [{1}]", hint.m_hint, hint.m_score);
+                Console.WriteLine("    {0} [{1}, {2}, {3}]",
+                    hint.m_hint,
+                    hint.m_score.worst_case,
+                    hint.m_score.average_case,
+                    hint.m_score.is_possible_answer);
             }
 		}
 	}
@@ -563,12 +627,12 @@ namespace wordle
 		{
             m_hints = new c_hint_list(hints_input_file);
             m_answers = new c_answer_list(answers_input_file);
-
-            m_hints.set_hint_score("aesir", 168);
-            m_hints.set_hint_score("arise", 168);
-            m_hints.set_hint_score("raise", 168);
-            m_hints.set_hint_score("reais", 168);
-            m_hints.set_hint_score("serai", 168);
+            
+            m_hints.set_hint_score("raise", new s_hint_score(168, 61.000862f, true));
+            m_hints.set_hint_score("arise", new s_hint_score(168, 63.7257f, true));
+            m_hints.set_hint_score("aesir", new s_hint_score(168, 69.882935f, false));
+            m_hints.set_hint_score("reais", new s_hint_score(168, 71.6108f, false));
+            m_hints.set_hint_score("serai", new s_hint_score(168, 72.92138f, false));
 
             // Use this to generate the first set of suggestions instead.
             // However seeing as how this takes about a minute and it's the same output each time,
