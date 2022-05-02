@@ -395,6 +395,11 @@ namespace wordle
 
             return new c_dictionary(filtered_words);
         }
+
+        public string get_best_guess()
+        {
+            return m_words.OrderByDescending(x => score_word(x)).First();
+        }
     }
     
     [DebuggerDisplay("{worst_case}, {average_case}, {is_possible_answer}", Type = "s_hint_score")]
@@ -616,6 +621,11 @@ namespace wordle
                     hint.m_score.is_possible_answer);
             }
 		}
+
+        public string get_best_guess()
+        {
+            return m_hints.OrderBy(hint => hint.m_score, new c_hint_comparer()).First().m_hint;
+        }
 	}
 
     internal interface i_bot
@@ -624,6 +634,7 @@ namespace wordle
         public void print_suggestions();
         public void print_solution();
         public void apply(c_guess guess);
+        public string get_best_guess();
     }
 
     internal class c_bot_1 : i_bot
@@ -656,6 +667,11 @@ namespace wordle
         public void apply(c_guess guess)
         {
             m_possible_answers = m_possible_answers.apply(guess);
+        }
+
+        public string get_best_guess()
+        {
+            return m_possible_answers.get_best_guess();
         }
     }
 
@@ -711,19 +727,29 @@ namespace wordle
 
             m_hints.score_hints(m_answers);
         }
+
+        public string get_best_guess()
+        {
+            return m_hints.get_best_guess();
+        }
 	}
 
     internal class wordle
     {
         public static int k_word_length = 5;
 
-        private static void solve(i_bot bot)
+        private static void solve(i_bot bot, string answer)
 		{
             while(!bot.solved())
             {
                 bot.print_suggestions();
 
                 c_guess guess = null;
+
+                if (answer != null)
+                {
+                    guess = new c_guess(bot.get_best_guess(), answer);
+                }
 
                 while (guess == null)
                 {
@@ -766,7 +792,7 @@ namespace wordle
                 bot = new c_bot_1(args[0]);
             }
 
-            solve(bot);
+            solve(bot, null);
         }
     }
 }
