@@ -272,7 +272,7 @@ namespace wordle
             _ => throw new Exception(String.Format("Unknown feedback color '{0}'", input))
         };
 
-        public void write_line()
+        public void write_line(bool verbose)
         {
             Console.Write("[");
 
@@ -301,8 +301,25 @@ namespace wordle
             }
 
             Console.ResetColor();
-            Console.Write(" ]");
-            Console.WriteLine();
+            Console.Write(" ] ");
+
+            if (verbose)
+            {
+                Console.WriteLine();
+            }
+        }
+
+        public bool is_solution()
+        {
+            foreach (s_feedback f in feedback)
+            {
+                if (f.color != e_feedback_color.green)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 
@@ -738,13 +755,22 @@ namespace wordle
     {
         public static int k_word_length = 5;
 
-        private static void solve(i_bot bot, string answer)
+        private static int solve(i_bot bot, string answer, bool verbose)
 		{
+            int guess_count= 0;
+
+            c_guess guess = null;
+
             while(!bot.solved())
             {
-                bot.print_suggestions();
+                if (verbose)
+                {
+                    bot.print_suggestions();
+                }
 
-                c_guess guess = null;
+                guess_count++;
+
+                guess = null;
 
                 if (answer != null)
                 {
@@ -768,18 +794,64 @@ namespace wordle
                     }
                 }
 
-                guess.write_line();
+                guess.write_line(verbose);
 
                 bot.apply(guess);
             }
+            
+            if (!guess.is_solution())
+            {
+                guess_count++;
+            }
 
-            bot.print_solution();
+            if (verbose)
+            {
+                bot.print_solution();
+            }
+            else
+            {
+                Console.WriteLine();
+            }
+
+            return guess_count;
 		}
+
+        static void test_full_dictionary(string hints_input_file, string answers_input_file)
+        {
+            Dictionary<int, int> totals = new Dictionary<int, int>();
+
+            foreach (string answer in File.ReadAllLines(answers_input_file))
+            {
+                // i_bot bot = new c_bot_1(answers_input_file);
+                i_bot bot = new c_bot_2(hints_input_file, answers_input_file);
+
+                int guess_count = solve(bot, answer, false);
+
+                if (totals.ContainsKey(guess_count))
+                {
+                    totals[guess_count] = totals[guess_count] + 1;
+                }
+                else
+                {
+                    totals.Add(guess_count, 1);
+                }
+            }
+
+            Console.WriteLine();
+
+            foreach(int key in totals.Keys)
+            {
+                Console.WriteLine("[{0}] = {1}", key, totals[key]);
+            }
+        }
 
         static void Main(string[] args)
         {
             Console.WriteLine("W O R D L E");
             Console.WriteLine();
+
+            // test_full_dictionary(args[1], args[2]);
+            // return;
 
             i_bot bot;
 
@@ -792,7 +864,7 @@ namespace wordle
                 bot = new c_bot_1(args[0]);
             }
 
-            solve(bot, null);
+            solve(bot, null, true);
         }
     }
 }
