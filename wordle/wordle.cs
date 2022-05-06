@@ -423,13 +423,13 @@ namespace wordle
     {
         public int Compare(s_hint_score a, s_hint_score b)
         {
-            if (a.worst_case != b.worst_case)
-            {
-                return a.worst_case.CompareTo(b.worst_case);
-            }
-            else if (a.average_case != b.average_case)
+            if (a.average_case != b.average_case)
             {
                 return a.average_case.CompareTo(b.average_case);
+            }
+            else if (a.worst_case != b.worst_case)
+            {
+                return a.worst_case.CompareTo(b.worst_case);
             }
             else
             {
