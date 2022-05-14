@@ -450,7 +450,8 @@ namespace wordle
             }
             else
             {
-                return a.is_possible_answer.CompareTo(b.is_possible_answer);
+                // sort 'true' before 'false'
+                return b.is_possible_answer.CompareTo(a.is_possible_answer);
             }
         }
     }
