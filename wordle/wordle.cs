@@ -217,6 +217,11 @@ namespace wordle
             return result;
 		}
 
+        public string to_string()
+        {
+            return new string(feedback.Select(f => f.letter).ToArray());
+        }
+
         public bool matches(string word)
         {
             // word[n] == 'x'
@@ -417,6 +422,11 @@ namespace wordle
         {
             return m_words.OrderByDescending(x => score_word(x)).First();
         }
+
+        public string get_solution()
+        {
+            return m_words.First();
+        }
     }
     
     [DebuggerDisplay("{worst_case}, {average_case}, {is_possible_answer}", Type = "s_hint_score")]
@@ -544,6 +554,11 @@ namespace wordle
 		{
             Console.WriteLine("    {0}", m_answers.First());
 		}
+
+        public string get_solution()
+        {
+            return m_answers.First();
+        }
 	}
 
     internal class c_hint_list
@@ -650,6 +665,7 @@ namespace wordle
     {
         public bool solved();
         public void print_suggestions();
+        public string get_solution();
         public void print_solution();
         public void apply(c_guess guess);
         public string get_best_guess();
@@ -680,7 +696,12 @@ namespace wordle
         public void print_solution()
 		{
             m_possible_answers.write_clues("Solution:");
-		}
+        }
+
+        public string get_solution()
+        {
+            return m_possible_answers.get_solution();
+        }
 
         public void apply(c_guess guess)
         {
@@ -739,6 +760,11 @@ namespace wordle
             Console.WriteLine();
 		}
 
+        public string get_solution()
+        {
+            return m_answers.get_solution();
+        }
+
         public void apply(c_guess guess)
         {
             m_answers.apply(guess);
@@ -756,9 +782,9 @@ namespace wordle
     {
         public static int k_word_length = 5;
 
-        private static int solve(i_bot bot, string answer, bool verbose)
+        private static string[] solve(i_bot bot, string answer, bool verbose)
 		{
-            int guess_count= 0;
+            List<string> guesses = new List<string>();
 
             c_guess guess = null;
 
@@ -768,8 +794,6 @@ namespace wordle
                 {
                     bot.print_suggestions();
                 }
-
-                guess_count++;
 
                 guess = null;
 
@@ -795,6 +819,8 @@ namespace wordle
                     }
                 }
 
+                guesses.Add(guess.to_string());
+
                 guess.write_line(verbose);
 
                 bot.apply(guess);
@@ -802,7 +828,7 @@ namespace wordle
             
             if (!guess.is_solution())
             {
-                guess_count++;
+                guesses.Add(bot.get_solution());
             }
 
             if (verbose)
@@ -814,19 +840,25 @@ namespace wordle
                 Console.WriteLine();
             }
 
-            return guess_count;
+            return guesses.ToArray();
 		}
 
-        static void test_full_dictionary(string hints_input_file, string answers_input_file)
+        static void test_full_dictionary(string hints_input_file, string answers_input_file, string output_file)
         {
+            Stopwatch stopwatch = new Stopwatch();
+            stopwatch.Start();
+
             Dictionary<int, int> totals = new Dictionary<int, int>();
+
+            List<string> output_lines = new List<string>();
 
             foreach (string answer in File.ReadAllLines(answers_input_file))
             {
                 // i_bot bot = new c_bot_1(answers_input_file);
                 i_bot bot = new c_bot_2(hints_input_file, answers_input_file);
 
-                int guess_count = solve(bot, answer, false);
+                string[] guesses = solve(bot, answer, false);
+                int guess_count = guesses.Length;
 
                 if (totals.ContainsKey(guess_count))
                 {
@@ -836,7 +868,12 @@ namespace wordle
                 {
                     totals.Add(guess_count, 1);
                 }
+
+                output_lines.Add(String.Join(',', guesses));
             }
+
+            stopwatch.Stop();
+            Console.WriteLine("Time taken = {0}", stopwatch.Elapsed);
 
             Console.WriteLine();
 
@@ -844,6 +881,8 @@ namespace wordle
             {
                 Console.WriteLine("[{0}] = {1}", key, totals[key]);
             }
+
+            File.WriteAllLines(output_file, output_lines);
         }
 
         static void Main(string[] args)
@@ -851,7 +890,7 @@ namespace wordle
             Console.WriteLine("W O R D L E");
             Console.WriteLine();
 
-            // test_full_dictionary(args[1], args[2]);
+            // test_full_dictionary(args[1], args[2], args[3]);
             // return;
 
             i_bot bot;
