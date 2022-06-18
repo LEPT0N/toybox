@@ -894,17 +894,26 @@ namespace wordle
             // return;
 
             i_bot bot;
+            int answer_index = int.MaxValue;
 
             if (args[0] == "++")
 			{
                 bot = new c_bot_2(args[1], args[2]);
+                answer_index = 3;
 			}
             else
             {
                 bot = new c_bot_1(args[0]);
+                answer_index = 1;
             }
 
-            solve(bot, null, true);
+            string answer = null;
+            if (args.Length > answer_index)
+            {
+                answer = args[answer_index];
+            }
+
+            solve(bot, answer, true);
         }
     }
 }
