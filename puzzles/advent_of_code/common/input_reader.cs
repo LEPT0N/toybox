@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace advent_of_code_2020
+namespace advent_of_code_common.input_reader
 {
-    internal class c_input_reader
+    public class c_input_reader
     {
         public c_input_reader(string input)
         {

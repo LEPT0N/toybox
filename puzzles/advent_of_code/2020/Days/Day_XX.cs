@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using advent_of_code_common.input_reader;
 
 namespace advent_of_code_2020.Days
 {
