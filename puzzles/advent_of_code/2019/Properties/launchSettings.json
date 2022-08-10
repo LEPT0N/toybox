@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "advent_of_code_2019": {
+      "commandName": "Project",
+      "commandLineArgs": "1 1 input\\input_2019_day_01.txt pretty"
+    }
+  }
+}
