@@ -19,6 +19,9 @@ namespace advent_of_code_2019
 
             switch (day, part)
             {
+                case (1, 1): day_01.part_1(input, pretty); break;
+                case (1, 2): day_01.part_2(input, pretty); break;
+
                 default:
                     Console.WriteLine("Unexpected day '{0}'", args[0]);
                     break;

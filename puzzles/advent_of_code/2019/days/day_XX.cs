@@ -26,7 +26,7 @@ namespace advent_of_code_2019.days
             }
         }
 
-        public static void Part_1(
+        public static void part_1(
             string input,
             bool pretty)
         {
@@ -38,7 +38,7 @@ namespace advent_of_code_2019.days
             Console.ResetColor();
         }
 
-        public static void Part_2(
+        public static void part_2(
             string input,
             bool pretty)
         {
