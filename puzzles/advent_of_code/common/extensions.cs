@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace advent_of_code_common.extensions
 {
@@ -83,6 +79,66 @@ namespace advent_of_code_common.extensions
             }
 
             return new_grid;
+        }
+
+        public static void for_each<T>(this T[] array, Action<T> action)
+        {
+            for (int index = 0; index < array.Length; index++)
+            {
+                action(array[index]);
+            }
+        }
+
+        public static void for_each<T>(this T[][] array, Action<T> action)
+        {
+            for (int i = 0; i < array.Length; i++)
+            {
+                for (int j = 0; j < array[i].Length; j++)
+                {
+                    action(array[i][j]);
+                }
+            }
+        }
+
+        public static void for_each<T>(this T[,] array, Action<T> action)
+        {
+            for (int i = 0; i < array.GetLength(0); i++)
+            {
+                for (int j = 0; j < array.GetLength(1); j++)
+                {
+                    action(array[i, j]);
+                }
+            }
+        }
+
+        public static void fill<T>(this T[] array, T value)
+        {
+            for (int i = 0; i < array.Length; i++)
+            {
+                array[i] = value;
+            }
+        }
+
+        public static void fill<T>(this T[][] array, T value)
+        {
+            for (int i = 0; i < array.Length; i++)
+            {
+                for (int j = 0; j < array[i].Length; j++)
+                {
+                    array[i][j] = value;
+                }
+            }
+        }
+
+        public static void fill<T>(this T[,] array, T value)
+        {
+            for (int i = 0; i < array.GetLength(0); i++)
+            {
+                for (int j = 0; j < array.GetLength(1); j++)
+                {
+                    array[i, j] = value;
+                }
+            }
         }
     }
 }

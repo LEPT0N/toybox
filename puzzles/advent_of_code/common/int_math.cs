@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 
 namespace advent_of_code_common.int_math
@@ -15,6 +16,13 @@ namespace advent_of_code_common.int_math
             x = input_x;
             y = input_y;
             z = input_z;
+        }
+
+        public c_vector(c_vector other)
+        {
+            x = other.x;
+            y = other.y;
+            z = other.z;
         }
 
         public c_vector() : this(0, 0, 0) { }
@@ -55,6 +63,90 @@ namespace advent_of_code_common.int_math
                 x + other.x,
                 y + other.y,
                 z + other.z);
+        }
+    }
+
+    [DebuggerDisplay("{min} -> {max}", Type = "c_rectangle")]
+    public class c_rectangle
+    {
+        public c_vector min { get; private set; }
+        public c_vector max { get; private set; }
+        public int width { get => max.x - min.x; }
+        public int height { get => max.y - min.y; }
+        public int depth { get => max.z - min.z; }
+
+        public c_rectangle()
+        {
+            min = new c_vector();
+            max = new c_vector();
+        }
+
+        public c_rectangle(c_vector first, c_vector second)
+        {
+            min = new c_vector(Math.Min(first.x, second.x), Math.Min(first.y, second.y), Math.Min(first.z, second.z));
+            max = new c_vector(Math.Max(first.x, second.x), Math.Max(first.y, second.y), Math.Max(first.z, second.z));
+        }
+
+        public bool intersects(c_rectangle other)
+        {
+            return min.x <= other.max.x
+                && max.x >= other.min.x
+                && min.y <= other.max.y
+                && max.y >= other.min.y
+                && min.z <= other.max.z
+                && max.z >= other.min.z;
+        }
+
+        public c_rectangle get_intersection(c_rectangle other)
+        {
+            if (intersects(other))
+            {
+                c_vector intersection_min = new c_vector(
+                    Math.Max(min.x, other.min.x),
+                    Math.Max(min.y, other.min.y),
+                    Math.Max(min.z, other.min.z));
+
+                c_vector intersection_max = new c_vector(
+                    Math.Min(max.x, other.max.x),
+                    Math.Min(max.y, other.max.y),
+                    Math.Min(max.z, other.max.z));
+
+                return new c_rectangle(intersection_min, intersection_max);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public c_vector[] to_int_vectors()
+        {
+            List<c_vector> results = new List<c_vector>();
+
+            for (int x = min.x; x <= max.x; x++)
+            {
+                for (int y = min.y; y <= max.y; y++)
+                {
+                    for (int z = min.z; z <= max.z; z++)
+                    {
+                        results.Add(new c_vector(x, y, z));
+                    }
+                }
+            }
+
+            return results.ToArray();
+        }
+
+        public void expand_to_fit(c_rectangle other)
+        {
+            min.x = Math.Min(min.x, other.min.x);
+            max.x = Math.Max(max.x, other.max.x);
+
+            min.y = Math.Min(min.y, other.min.y);
+            max.y = Math.Max(max.y, other.max.y);
+
+            min.z = Math.Min(min.z, other.min.z);
+            max.z = Math.Max(max.z, other.max.z);
         }
     }
 
