@@ -10,6 +10,7 @@ namespace advent_of_code_2022.days
 {
     internal class day_05
     {
+        [DebuggerDisplay("[{name}]", Type = "c_crate")]
         internal class c_crate
         {
             public char name { get; set; }
@@ -35,6 +36,7 @@ namespace advent_of_code_2022.days
             }
         }
 
+        [DebuggerDisplay("Count = {crates.Count}", Type = "c_pile")]
         internal class c_pile
         {
             List<c_crate> crates = new List<c_crate>();
