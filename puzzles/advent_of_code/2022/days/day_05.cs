@@ -3,52 +3,125 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using advent_of_code_common.extensions;
 using advent_of_code_common.input_reader;
 
 namespace advent_of_code_2022.days
 {
     internal class day_05
     {
+        internal class c_crate
+        {
+            public char name { get; set; }
+
+            public int last_modified { get; set; }
+
+            public c_crate(char n)
+            {
+                name = n;
+                last_modified = -1;
+            }
+
+            public void print(int current_move)
+            {
+                if (last_modified == current_move)
+                {
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                }
+
+                Console.Write($"[{name}] ");
+
+                Console.ResetColor();
+            }
+        }
+
         internal class c_pile
         {
-            List<char> crates = new List<char>();
+            List<c_crate> crates = new List<c_crate>();
 
-            public void add_crate_to_bottom(char crate)
+            int last_removed_from = -1;
+            int previous_height = -1;
+
+            public int get_crate_count(int current_move)
+            {
+                int result = crates.Count;
+
+                if (current_move == last_removed_from)
+                {
+                    result = previous_height;
+                }
+
+                return result;
+            }
+
+            public void print_crate_at(int index, int current_move)
+            {
+                if (index < crates.Count)
+                {
+                    crates[index].print(current_move);
+                }
+                else if(current_move == last_removed_from && index < previous_height)
+                {
+                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                    Console.Write("[ ] ");
+                    Console.ResetColor();
+                }
+                else
+                {
+                    Console.Write("    ");
+                }
+            }
+
+            public void add_crate_to_bottom(c_crate crate)
             {
                 crates.Insert(0, crate);
             }
 
-            public char remove_crate()
+            public c_crate remove_crate(int current_move)
             {
-                char crate = crates[crates.Count - 1];
+                c_crate crate = crates[crates.Count - 1];
+
+                if (current_move > last_removed_from)
+                {
+                    last_removed_from = current_move;
+                    previous_height = crates.Count;
+                }
+                crate.last_modified = current_move;
 
                 crates.RemoveAt(crates.Count - 1);
 
                 return crate;
             }
 
-            public void add_crate(char crate)
+            public void add_crate(c_crate crate)
             {
                 crates.Add(crate);
             }
 
-            public char peek_top_crate()
+            public c_crate peek_top_crate()
             {
                 return crates[crates.Count - 1];
             }
 
-            public char[] remove_crates(int amount)
+            public c_crate[] remove_crates(int amount, int current_move)
             {
-                char[] removed_crates = crates.GetRange(crates.Count - amount, amount).ToArray();
+                c_crate[] removed_crates = crates.GetRange(crates.Count - amount, amount).ToArray();
+
+                if (current_move > last_removed_from)
+                {
+                    last_removed_from = current_move;
+                    previous_height = crates.Count;
+                }
+                removed_crates.for_each(crate => crate.last_modified = current_move);
 
                 crates.RemoveRange(crates.Count - amount, amount);
 
                 return removed_crates;
             }
 
-            public void add_crates(char[] added_crates)
+            public void add_crates(c_crate[] added_crates)
             {
-                foreach (char crate in added_crates)
+                foreach (c_crate crate in added_crates)
                 {
                     crates.Add(crate);
                 }
@@ -106,7 +179,7 @@ namespace advent_of_code_2022.days
                     else
                     {
                         // Add a crate to a pile.
-                        piles[pile_index].add_crate_to_bottom(line_char);
+                        piles[pile_index].add_crate_to_bottom(new c_crate(line_char));
                     }
                 }
             }
@@ -131,25 +204,56 @@ namespace advent_of_code_2022.days
             return (piles, movements.ToArray());
         }
 
+        internal static void print_piles(c_pile[] piles, int current_move, bool pretty)
+        {
+            if (!pretty)
+            {
+                return;
+            }
+
+            Console.WriteLine();
+
+            int max_pile_height = piles.Max(pile => pile.get_crate_count(current_move));
+
+            for (int crate_index = max_pile_height - 1; crate_index >=0; crate_index--)
+            {
+                piles.for_each(pile => pile.print_crate_at(crate_index, current_move));
+                Console.WriteLine();
+            }
+
+            for (int i = 1; i <= piles.Length; i++)
+            {
+                Console.Write($" {i}  ");
+            }
+            Console.WriteLine();
+        }
+
         public static void part_1(
             string input,
             bool pretty)
         {
             (c_pile[] piles, s_movement[] movements) = parse_input(input, pretty);
 
+            int move_count = 0;
+            print_piles(piles, move_count, pretty);
+
             foreach (s_movement movement in movements)
             {
+                move_count++;
+
                 for (int i = 0; i < movement.amount; i++)
                 {
-                    char crate = piles[movement.source - 1].remove_crate();
+                    c_crate crate = piles[movement.source - 1].remove_crate(move_count);
                     piles[movement.destination - 1].add_crate(crate);
                 }
+
+                print_piles(piles, move_count, pretty);
             }
 
             string result = "";
             foreach (c_pile pile in piles)
             {
-                result += pile.peek_top_crate();
+                result += pile.peek_top_crate().name;
             }
 
             Console.ForegroundColor = ConsoleColor.Green;
@@ -164,16 +268,23 @@ namespace advent_of_code_2022.days
         {
             (c_pile[] piles, s_movement[] movements) = parse_input(input, pretty);
 
+            int move_count = 0;
+            print_piles(piles, move_count, pretty);
+
             foreach (s_movement movement in movements)
             {
-                char[] crates = piles[movement.source - 1].remove_crates(movement.amount);
+                move_count++;
+
+                c_crate[] crates = piles[movement.source - 1].remove_crates(movement.amount, move_count);
                 piles[movement.destination - 1].add_crates(crates);
+
+                print_piles(piles, move_count, pretty);
             }
 
             string result = "";
             foreach (c_pile pile in piles)
             {
-                result += pile.peek_top_crate();
+                result += pile.peek_top_crate().name;
             }
 
             Console.ForegroundColor = ConsoleColor.Green;
