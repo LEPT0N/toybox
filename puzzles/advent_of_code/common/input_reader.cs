@@ -19,6 +19,11 @@ namespace advent_of_code_common.input_reader
             return result;
         }
 
+        public string peek_line()
+        {
+            return m_lines[m_line_number];
+        }
+
         public bool has_more_lines()
         {
             return m_line_number < m_lines.Length;
