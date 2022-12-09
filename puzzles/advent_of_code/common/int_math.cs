@@ -72,7 +72,7 @@ namespace advent_of_code_common.int_math
                 z + other.z);
         }
 
-        public void taxi_normalize()
+        public void normalize()
         {
             x = Math.Max(-1, Math.Min(1, x));
             y = Math.Max(-1, Math.Min(1, y));
