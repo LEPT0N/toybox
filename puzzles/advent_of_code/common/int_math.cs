@@ -18,6 +18,13 @@ namespace advent_of_code_common.int_math
             z = input_z;
         }
 
+        public c_vector(int input_x, int input_y)
+        {
+            x = input_x;
+            y = input_y;
+            z = 0;
+        }
+
         public c_vector(c_vector other)
         {
             x = other.x;
@@ -63,6 +70,35 @@ namespace advent_of_code_common.int_math
                 x + other.x,
                 y + other.y,
                 z + other.z);
+        }
+
+        public void taxi_normalize()
+        {
+            x = Math.Max(-1, Math.Min(1, x));
+            y = Math.Max(-1, Math.Min(1, y));
+            z = Math.Max(-1, Math.Min(1, z));
+        }
+
+        public bool adjacent(c_vector other)
+        {
+            return Math.Abs(x - other.x) <= 1
+                && Math.Abs(y - other.y) <= 1
+                && Math.Abs(z - other.z) <= 1;
+        }
+    }
+
+    public class c_vector_comparer : IEqualityComparer<c_vector>
+    {
+        public bool Equals(c_vector a, c_vector b)
+        {
+            return a.x == b.x
+                && a.y == b.y
+                && a.z == b.z;
+        }
+
+        public int GetHashCode(c_vector v)
+        {
+            return HashCode.Combine(v.x, v.y, v.z);
         }
     }
 
@@ -147,6 +183,18 @@ namespace advent_of_code_common.int_math
 
             min.z = Math.Min(min.z, other.min.z);
             max.z = Math.Max(max.z, other.max.z);
+        }
+
+        public void expand_to_fit(c_vector point)
+        {
+            min.x = Math.Min(min.x, point.x);
+            max.x = Math.Max(max.x, point.x);
+
+            min.y = Math.Min(min.y, point.y);
+            max.y = Math.Max(max.y, point.y);
+
+            min.z = Math.Min(min.z, point.z);
+            max.z = Math.Max(max.z, point.z);
         }
     }
 
