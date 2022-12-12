@@ -213,6 +213,15 @@ namespace advent_of_code_common.int_math
         angle_270,
     }
 
+    public enum e_direction
+    {
+        none,
+        up,
+        down,
+        left,
+        right,
+    }
+
     public class c_matrix
     {
         public readonly int[,] values = new int[4, 4];

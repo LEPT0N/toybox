@@ -10,13 +10,6 @@ namespace advent_of_code_2022.days
 {
     internal class day_09
     {
-        internal enum e_direction
-        {
-            up,
-            down,
-            left,
-            right,
-        }
 
         [DebuggerDisplay("{direction} {distance}", Type = "c_movement")]
         internal class c_movement
