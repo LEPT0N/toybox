@@ -301,6 +301,14 @@ namespace advent_of_code_2022.days
                 }
             }
 
+            if (pretty)
+            {
+                foreach (c_packet packet in packets)
+                {
+                    Console.WriteLine(packet.to_string);
+                }
+            }
+
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine();
             Console.WriteLine("Result = {0}", result);
