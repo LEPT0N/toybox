@@ -157,7 +157,7 @@ namespace advent_of_code_2022.days
                                 break;
 
                             case e_direction.none:
-                                Console.Write("?");
+                                Console.Write(" ");
                                 break;
                         }
                         break;
