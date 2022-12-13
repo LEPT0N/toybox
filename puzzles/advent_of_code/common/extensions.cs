@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace advent_of_code_common.extensions
 {
@@ -86,6 +87,14 @@ namespace advent_of_code_common.extensions
             for (int index = 0; index < array.Length; index++)
             {
                 action(array[index]);
+            }
+        }
+
+        public static void for_each<T>(this IEnumerable<T> array, Action<T> action)
+        {
+            foreach (T element in array)
+            {
+                action(element);
             }
         }
 
