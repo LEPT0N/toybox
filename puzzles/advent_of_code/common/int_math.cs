@@ -102,6 +102,52 @@ namespace advent_of_code_common.int_math
         }
     }
 
+    [DebuggerDisplay("{first} -> {second}", Type = "c_line")]
+    public class c_line
+    {
+        public c_vector first { get; set; }
+        public c_vector second { get; set; }
+
+        public c_line()
+        {
+            first = new c_vector();
+            second = new c_vector();
+        }
+
+        public c_line(c_vector f, c_vector s)
+        {
+            first = f;
+            second = s;
+        }
+
+        public c_vector[] to_int_vectors()
+        {
+            List<c_vector> results = new List<c_vector>();
+
+            int min_x = Math.Min(first.x, second.x);
+            int max_x = Math.Max(first.x, second.x);
+
+            for (int x = min_x; x <= max_x; x++)
+            {
+                int min_y = Math.Min(first.y, second.y);
+                int max_y = Math.Max(first.y, second.y);
+
+                for (int y = min_y; y <= max_y; y++)
+                {
+                    int min_z = Math.Min(first.z, second.z);
+                    int max_z = Math.Max(first.z, second.z);
+
+                    for (int z = min_z; z <= max_z; z++)
+                    {
+                        results.Add(new c_vector(x, y, z));
+                    }
+                }
+            }
+
+            return results.ToArray();
+        }
+    }
+
     [DebuggerDisplay("{min} -> {max}", Type = "c_rectangle")]
     public class c_rectangle
     {
@@ -117,10 +163,26 @@ namespace advent_of_code_common.int_math
             max = new c_vector();
         }
 
+        public c_rectangle(c_vector v)
+        {
+            min = new c_vector(v.x, v.y, v.z);
+            max = new c_vector(v.x, v.y, v.z);
+        }
+
         public c_rectangle(c_vector first, c_vector second)
         {
             min = new c_vector(Math.Min(first.x, second.x), Math.Min(first.y, second.y), Math.Min(first.z, second.z));
             max = new c_vector(Math.Max(first.x, second.x), Math.Max(first.y, second.y), Math.Max(first.z, second.z));
+        }
+
+        public bool contains(c_vector v)
+        {
+            return min.x <= v.x
+                && max.x >= v.x
+                && min.y <= v.y
+                && max.y >= v.y
+                && min.z <= v.z
+                && max.z >= v.z;
         }
 
         public bool intersects(c_rectangle other)
@@ -195,6 +257,18 @@ namespace advent_of_code_common.int_math
 
             min.z = Math.Min(min.z, point.z);
             max.z = Math.Max(max.z, point.z);
+        }
+
+        public void expand_by(int amount)
+        {
+            min.x -= amount;
+            max.x += amount;
+
+            min.y -= amount;
+            max.y += amount;
+
+            min.z -= amount;
+            max.z += amount;
         }
     }
 

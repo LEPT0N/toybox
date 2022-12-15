@@ -149,5 +149,37 @@ namespace advent_of_code_common.extensions
                 }
             }
         }
+
+        public static int count<T>(this T[,] array, Func<T, bool> predicate)
+        {
+            int sum = 0;
+
+            for (int i = 0; i < array.GetLength(0); i++)
+            {
+                for (int j = 0; j < array.GetLength(1); j++)
+                {
+                    if (predicate(array[i, j]))
+                    {
+                        sum++;
+                    }
+                }
+            }
+
+            return sum;
+        }
+
+        public static void copy_to<T>(this T[,] source, T[,] destination,
+            int source_start_0, int destination_start_0, int length_0,
+            int source_start_1, int destination_start_1, int length_1)
+        {
+            for (int index_0 = 0; index_0 < length_0; index_0++)
+            {
+                for (int index_1 = 0; index_1 < length_1; index_1++)
+                {
+                    destination[destination_start_0 + index_0, destination_start_1 + index_1]
+                        = source[source_start_0 + index_0, source_start_1 + index_1];
+                }
+            }
+        }
     }
 }
