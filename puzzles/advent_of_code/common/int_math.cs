@@ -41,6 +41,11 @@ namespace advent_of_code_common.int_math
             Console.WriteLine();
         }
 
+        public string to_string()
+        {
+            return $"[{x}, {y}, {z}]";
+        }
+
         public c_vector inverse()
         {
             return new c_vector(-x, -y, -z);
