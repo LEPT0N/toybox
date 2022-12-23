@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace advent_of_code_common.input_reader
 {
@@ -17,6 +18,11 @@ namespace advent_of_code_common.input_reader
             m_line_number++;
 
             return result;
+        }
+
+        public string[] read_all_lines()
+        {
+            return m_lines;
         }
 
         public string peek_line()

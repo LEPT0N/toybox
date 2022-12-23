@@ -181,5 +181,17 @@ namespace advent_of_code_common.extensions
                 }
             }
         }
+
+        public static T[,] add_border<T>(this T[,] source, int border_size)
+        {
+            T[,] destination = new T[source.GetLength(0) + border_size * 2, source.GetLength(1) + border_size * 2];
+
+            source.copy_to(
+                destination,
+                0, border_size, source.GetLength(0),
+                0, border_size, source.GetLength(1));
+
+            return destination;
+        }
     }
 }
