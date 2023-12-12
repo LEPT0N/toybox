@@ -10,9 +10,19 @@ namespace advent_of_code_common.extensions
             return (0 != (bit_field & (1 << index)));
         }
 
+        public static bool test_bit(this uint bit_field, int index)
+        {
+            return (0U != (bit_field & (1U << index)));
+        }
+
         public static void set_bit(ref this int bit_field, int index)
         {
             bit_field |= (1 << index);
+        }
+
+        public static void set_bit(ref this uint bit_field, int index)
+        {
+            bit_field |= (1U << index);
         }
 
         public static T[,] flip<T>(this T[,] grid)
@@ -178,6 +188,24 @@ namespace advent_of_code_common.extensions
                 {
                     destination[destination_start_0 + index_0, destination_start_1 + index_1]
                         = source[source_start_0 + index_0, source_start_1 + index_1];
+                }
+            }
+        }
+
+        public static void copy_to<T>(this T[,,] source, T[,,] destination,
+            int source_start_0, int destination_start_0, int length_0,
+            int source_start_1, int destination_start_1, int length_1,
+            int source_start_2, int destination_start_2, int length_2)
+        {
+            for (int index_0 = 0; index_0 < length_0; index_0++)
+            {
+                for (int index_1 = 0; index_1 < length_1; index_1++)
+                {
+                    for (int index_2 = 0; index_2 < length_2; index_2++)
+                    {
+                        destination[destination_start_0 + index_0, destination_start_1 + index_1, destination_start_2 + index_2]
+                            = source[source_start_0 + index_0, source_start_1 + index_1, source_start_2 + index_2];
+                    }
                 }
             }
         }
