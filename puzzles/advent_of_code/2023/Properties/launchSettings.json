@@ -2,7 +2,7 @@
   "profiles": {
     "advent_of_code_2023": {
       "commandName": "Project",
-      "commandLineArgs": "7 2 C:\\Users\\DanMi\\Documents\\toybox\\puzzles\\advent_of_code\\2023\\input\\day_07.txt pretty"
+      "commandLineArgs": "8 2 C:\\Users\\DanMi\\Documents\\toybox\\puzzles\\advent_of_code\\2023\\input\\day_08.txt pretty"
     }
   }
 }
