@@ -177,8 +177,94 @@ namespace advent_of_code_common.extensions
 
             return sum;
         }
+		public static void swap_elements<T>(this T[] list, int i, int j)
+		{
+			T temp = list[i];
+			list[i] = list[j];
+			list[j] = temp;
+		}
 
-        public static void copy_to<T>(this T[,] source, T[,] destination,
+		public static void reverse_elements<T>(this T[] list, int i, int j)
+		{
+			while (i < j)
+			{
+				list.swap_elements(i, j);
+				i++;
+				j--;
+			}
+		}
+		public static T[] copy<T>(this T[] list)
+		{
+			T[] result = new T[list.Length];
+
+			for (int i = 0; i < list.Length; i++)
+			{
+				result[i] = list[i];
+			}
+
+			return result;
+		}
+
+		// Copied from my nonogram solver
+		public static int[][] get_all_permutations(this int[] permutation)
+		{
+			List<int[]> permutations = new List<int[]>();
+
+			do
+			{
+				permutations.Add(permutation.copy());
+			} while (permutation.get_next_permutation());
+
+			return permutations.ToArray();
+		}
+
+		// Copied from my nonogram solver
+		//
+		// If there is another possible permutation, return 'true' and edit the input to be the next permutation
+		// Written by me after understanding this explanation of std:next_permutation:
+		//      https://stackoverflow.com/questions/11483060/stdnext-permutation-implementation-explanation
+		// To use this, the first permutation is in ascending order, and the last permutation is in descending order.
+		public static bool get_next_permutation(this int[] list)
+		{
+			int first = 0;
+			int last = list.Length - 1;
+
+			int i = last - 1;
+
+			// Scan from the end of the list to find the first element not in descending order.
+			while (i >= first)
+			{
+				if (list[i] < list[i + 1])
+				{
+					// list[i + 1, last] is in descending order, but list[i] doesn't follow the trend.
+
+					// find the entry in list[i + 1, last] that is the next largest after list[i]
+					// We're guaranteed to find something since list[i] < list[i + 1]
+					// The first one we find is what we want, since list[i + 1, last] is in descending order
+					int next_largest = last;
+					while (list[i] >= list[next_largest])
+					{
+						next_largest--;
+					}
+
+					// put the next largest element into list[i] by swapping it with list[i]
+					// Note: list[i + 1, last] is still in descending order after this!
+					list.swap_elements(i, next_largest);
+
+					// Now that the next-largest element is in list[i], reverse list[i + 1, last] so that it's in ascending order.
+					list.reverse_elements(i + 1, last);
+
+					return true;
+				}
+
+				i--;
+			}
+
+			// The entire list is in descending order. No more permutations!
+			return false;
+		}
+
+		public static void copy_to<T>(this T[,] source, T[,] destination,
             int source_start_0, int destination_start_0, int length_0,
             int source_start_1, int destination_start_1, int length_1)
         {
