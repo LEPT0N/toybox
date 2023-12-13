@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace advent_of_code_common.extensions
 {
@@ -176,7 +178,28 @@ namespace advent_of_code_common.extensions
             }
 
             return sum;
+		}
+
+        public static Int64 sum(this Int64[] array)
+        {
+            return array.Aggregate((a, b) => a + b);
         }
+
+        public static Int64 sum(this IEnumerable<Int64> array)
+        {
+            return array.Aggregate((a, b) => a + b);
+        }
+
+        public static UInt64 sum(this UInt64[] array)
+        {
+            return array.Aggregate((a, b) => a + b);
+        }
+
+        public static UInt64 sum(this IEnumerable<UInt64> array)
+        {
+            return array.Aggregate((a, b) => a + b);
+        }
+
 		public static void swap_elements<T>(this T[] list, int i, int j)
 		{
 			T temp = list[i];
