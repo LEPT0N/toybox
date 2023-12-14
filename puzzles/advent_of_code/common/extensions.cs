@@ -180,7 +180,27 @@ namespace advent_of_code_common.extensions
             return sum;
 		}
 
-        public static Int64 sum(this Int64[] array)
+		public static T[,] to_2d_array<T>(this List<List<T>> array)
+		{
+			if (array.Count == 0 || array[0].Count == 0)
+			{
+				return new T[0, 0];
+			}
+
+			T[,] result = new T[array.Count, array[0].Count];
+
+			for (int i = 0; i < array.Count; i++)
+			{
+				for (int j = 0; j < array[0].Count; j++)
+				{
+					result[i, j] = array[i][j];
+				}
+			}
+
+			return result;
+		}
+
+		public static Int64 sum(this Int64[] array)
         {
             return array.Aggregate((a, b) => a + b);
         }
