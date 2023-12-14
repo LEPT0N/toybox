@@ -12,6 +12,9 @@ namespace advent_of_code_2023.days
 		[DebuggerDisplay("todo", Type = "c_type")]
 		internal class c_type
 		{
+#pragma warning disable 0169
+			int unused;
+#pragma warning restore 0169
 		}
 
 		internal static void parse_input(
