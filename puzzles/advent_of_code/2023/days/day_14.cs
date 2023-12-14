@@ -13,6 +13,7 @@ namespace advent_of_code_2023.days
 		internal class c_platform
 		{
 			List<List<char>> rocks;
+
 			public c_platform(List<string> input)
 			{
 				rocks = new List<List<char>>();
@@ -217,7 +218,7 @@ namespace advent_of_code_2023.days
 					break;
 				}
 
-				state_history.Add(platform.GetHashCode(), i);
+				state_history.Add(latest_state, i);
 			}
 
 			// fast forward to our last loop
