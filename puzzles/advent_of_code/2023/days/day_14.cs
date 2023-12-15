@@ -31,6 +31,15 @@ namespace advent_of_code_2023.days
 				}
 			}
 
+			public void display()
+			{
+				rocks.for_each(rock_row =>
+				{
+					rock_row.for_each(rock => Console.Write(rock));
+					Console.WriteLine();
+				});
+			}
+
 			// Probably good enough.
 			public override int GetHashCode()
 			{
@@ -180,7 +189,22 @@ namespace advent_of_code_2023.days
 		{
 			c_platform platform = parse_input(input, pretty);
 
+			if (pretty)
+			{
+				Console.WriteLine("initial:");
+				platform.display();
+				Console.WriteLine();
+			}
+
 			platform.tilt_up();
+
+			if (pretty)
+			{
+				Console.WriteLine();
+				Console.WriteLine("final:");
+				platform.display();
+				Console.WriteLine();
+			}
 
 			int load = platform.get_load();
 
@@ -195,6 +219,13 @@ namespace advent_of_code_2023.days
 			bool pretty)
 		{
 			c_platform platform = parse_input(input, pretty);
+
+			if (pretty)
+			{
+				Console.WriteLine("initial:");
+				platform.display();
+				Console.WriteLine();
+			}
 
 			int i = 0;
 			Dictionary<int, int> state_history = new Dictionary<int, int>();
@@ -251,6 +282,14 @@ namespace advent_of_code_2023.days
 				platform.tilt_left();
 				platform.tilt_down();
 				platform.tilt_right();
+			}
+
+			if (pretty)
+			{
+				Console.WriteLine();
+				Console.WriteLine("final:");
+				platform.display();
+				Console.WriteLine();
 			}
 
 			int load = platform.get_load();
