@@ -299,6 +299,7 @@ namespace advent_of_code_common.int_math
         down,
         left,
         right,
+        count,
     }
 
     public class c_matrix
@@ -473,6 +474,37 @@ namespace advent_of_code_common.int_math
                 + this.values[2, 3];
 
             return result;
+        }
+    }
+
+    public class c_int_math
+    {
+        public static e_direction rotate(e_direction direction, e_angle angle)
+        {
+            switch ((direction, angle))
+            {
+                case (e_direction.up, e_angle.angle_0): return e_direction.up;
+                case (e_direction.up, e_angle.angle_90): return e_direction.left;
+                case (e_direction.up, e_angle.angle_180): return e_direction.down;
+                case (e_direction.up, e_angle.angle_270): return e_direction.right;
+
+                case (e_direction.down, e_angle.angle_0): return e_direction.down;
+                case (e_direction.down, e_angle.angle_90): return e_direction.right;
+                case (e_direction.down, e_angle.angle_180): return e_direction.up;
+                case (e_direction.down, e_angle.angle_270): return e_direction.left;
+
+                case (e_direction.left, e_angle.angle_0): return e_direction.left;
+                case (e_direction.left, e_angle.angle_90): return e_direction.down;
+                case (e_direction.left, e_angle.angle_180): return e_direction.right;
+                case (e_direction.left, e_angle.angle_270): return e_direction.up;
+
+                case (e_direction.right, e_angle.angle_0): return e_direction.right;
+                case (e_direction.right, e_angle.angle_90): return e_direction.up;
+                case (e_direction.right, e_angle.angle_180): return e_direction.left;
+                case (e_direction.right, e_angle.angle_270): return e_direction.down;
+
+                default: throw new Exception($"Invalid rotation {direction} {angle}");
+            }
         }
     }
 }

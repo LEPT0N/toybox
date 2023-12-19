@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
 using System.Diagnostics;
-using System.Linq;
 using advent_of_code_common.display_helpers;
+using advent_of_code_common.extensions;
 using advent_of_code_common.input_reader;
 using advent_of_code_common.int_math;
 
@@ -12,62 +10,110 @@ namespace advent_of_code_2023.days
 {
 	internal class day_17
 	{
-		// might have to solve this with more tiles all with the same row/col.
-		// tier 0 = had just previously turned. need 4 search nodes in this tile for which direction you're now facing.
-			// Each teir 0 node connects to left/right tier 0 nodes and one tier 1 node straight ahead.
-		// tier 1 = had just moved straight from previous. There are also four of these.
-			// Each tier 1 node connects to left/right tier 0 nodes and one tier 2 node straight ahead.
-		// tier 2 = had just moved straight from previous. There are also four of these.
-			// Each tier 2 node only connects to left/right tier 0 nodes.
+		[DebuggerDisplay("{tile} direction = {direction_facing} tier = {tier} distance_from_start = {distance_from_start}", Type = "c_search_node")]
+		internal class c_search_node
+		{
+			public c_tile tile { get; private set; }
+			private int cost_to_enter { get; set; }
+			public int tier { get; private set; }
+			private e_direction direction_facing { get; set; }
 
-		// c_tile is the spot on the graph, and has 12 c_search_nodes in it.
+			public Dictionary<e_direction, c_search_node> neighbors { get; set; } = new Dictionary<e_direction, c_search_node>();
 
-		//internal class c_search_node
-		//{
-		//	int cost_to_enter;
-		//	e_direction direction_facing;
+			public int distance_from_start { get; private set; } = int.MaxValue;
+			public e_direction direction_from_start { get; private set; } = e_direction.none;
+			public c_search_node search_node_from_start { get; private set; } = null;
 
-		//	c_search_node next_node_left = null;
-		//	c_search_node next_node_right = null;
-		//	c_search_node next_node_straight = null;
+			public c_search_node(c_tile owning_tile, int c, e_direction d, int t)
+			{
+				tile = owning_tile;
+				cost_to_enter = c;
+				direction_facing = d;
+				tier = t;
+			}
 
-		//	e_direction direction_to_end { get; set; } = e_direction.none;
-		//	c_search_node searc_node_to_end { get; set; } = null;
-		//}
+			public void set_as_start()
+			{
+				distance_from_start = 0;
+			}
 
-		[DebuggerDisplay("cost = {cost_to_enter} distance = {distance_to_end}", Type = "c_tile")]
+			private void consider_direction(c_search_node neighbor, e_direction direction, PriorityQueue<c_search_node, int> queue)
+			{
+				// Is travelling from neighbor faster than my current best?
+				if (distance_from_start > neighbor.distance_from_start + cost_to_enter)
+				{
+					distance_from_start = neighbor.distance_from_start + cost_to_enter;
+					direction_from_start = direction;
+					search_node_from_start = neighbor;
+
+					queue.Enqueue(this, distance_from_start);
+				}
+			}
+
+			public void try_neighbors_reconsider(PriorityQueue<c_search_node, int> queue)
+			{
+				foreach (e_direction direction in neighbors.Keys)
+				{
+					neighbors[direction].consider_direction(this, c_int_math.rotate(direction, e_angle.angle_180), queue);
+				}
+			}
+		}
+
+		[DebuggerDisplay("row = {row} col = {col} cost = {cost_to_enter}", Type = "c_tile")]
 		internal class c_tile
 		{
-			//c_search_node[] search_nodes_facing_up = new c_search_node[3];
-			//c_search_node[] search_nodes_facing_down = new c_search_node[3];
-			//c_search_node[] search_nodes_facing_left = new c_search_node[3];
-			//c_search_node[] search_nodes_facing_right = new c_search_node[3];
+			public const int k_tier_count = 10;
+
+			// (direction, int) == (direction, tier)
+			public Dictionary<(e_direction, int), c_search_node> search_nodes { get; set; } = new Dictionary<(e_direction, int), c_search_node>();
 
 			int cost_to_enter { get; set; }
+			int row { get; set; }
+			int col { get; set; }
 
-			//public c_tile neighbor_up { get; set; } = null;
-			//public c_tile neighbor_down { get; set; } = null;
-			//public c_tile neighbor_left { get; set; } = null;
-			//public c_tile neighbor_right { get; set; } = null;
-
-			public Dictionary<e_direction, c_tile> neighbors = new Dictionary<e_direction, c_tile>();
-
-			public int distance_to_end { get; private set; } = int.MaxValue;
-			e_direction direction_to_end { get; set; } = e_direction.none;
-			c_tile neighbor_to_end { get; set; } = null;
+			public int distance_from_start { get; private set; } = int.MaxValue;
+			e_direction direction_from_start { get; set; } = e_direction.none;
+			c_search_node search_node_from_start { get; set; } = null;
 			bool is_on_solution_path { get; set; } = false;
 
-			public c_tile(int c)
+			public c_tile(int cost, int r, int c)
 			{
-				cost_to_enter = c;
+				cost_to_enter = cost;
+				row = r;
+				col = c;
+
+				for (e_direction direction = e_direction.up; direction < e_direction.count; direction++)
+				{
+					for (int tier = 0; tier < k_tier_count; tier++)
+					{
+						search_nodes[(direction, tier)] = new c_search_node(this, cost_to_enter, direction, tier);
+					}
+				}
+
 			}
 
-			public void set_as_end()
+			public void set_as_start()
 			{
-				distance_to_end = 0;
+				distance_from_start = 0;
+
+				foreach (c_search_node search_node in search_nodes.Values)
+				{
+					// if (search_node.tier == 0)
+					{
+						search_node.set_as_start();
+					}
+				}
 			}
 
-			public void display(bool display_arrows = false)
+			public void enqueue_all_search_nodes(PriorityQueue<c_search_node, int> queue)
+			{
+				foreach (c_search_node search_node in search_nodes.Values)
+				{
+					queue.Enqueue(search_node, search_node.distance_from_start);
+				}
+			}
+
+			public void display()
 			{
 				switch (cost_to_enter)
 				{
@@ -91,24 +137,24 @@ namespace advent_of_code_2023.days
 						break;
 				}
 
-				if (is_on_solution_path || display_arrows)
+				if (is_on_solution_path)
 				{
-					switch (direction_to_end)
+					switch (direction_from_start)
 					{
 						case e_direction.up:
-							Console.Write("^");
-							break;
-
-						case e_direction.down:
 							Console.Write("v");
 							break;
 
+						case e_direction.down:
+							Console.Write("^");
+							break;
+
 						case e_direction.left:
-							Console.Write("<");
+							Console.Write(">");
 							break;
 
 						case e_direction.right:
-							Console.Write(">");
+							Console.Write("<");
 							break;
 
 						case e_direction.none:
@@ -125,101 +171,27 @@ namespace advent_of_code_2023.days
 				Console.ResetColor();
 			}
 
-			private void consider_direction(c_tile neighbor, e_direction direction)
+			public void draw_path_from_start(int min_straight_line, int max_straight_line)
 			{
-				// Is travelling through neighbor faster than my current best?
-				if (distance_to_end > neighbor.distance_to_end + neighbor.cost_to_enter)
+				int min_distance_from_start = int.MaxValue;
+				c_search_node start_node = null;
+				search_nodes.Values.for_each(search_node =>
 				{
-					distance_to_end = neighbor.distance_to_end + neighbor.cost_to_enter;
-					direction_to_end = direction;
-					neighbor_to_end = neighbor;
-
-					compute_neighbors_distance_to_me();
-				}
-			}
-
-			public void compute_neighbors_distance_to_me()
-			{
-				c_tile neighbor;
-
-				if (neighbors.TryGetValue(e_direction.up, out neighbor)) { neighbor.consider_direction(this, e_direction.down); }
-				if (neighbors.TryGetValue(e_direction.down, out neighbor)) { neighbor.consider_direction(this, e_direction.up); }
-				if (neighbors.TryGetValue(e_direction.left, out neighbor)) { neighbor.consider_direction(this, e_direction.right); }
-				if (neighbors.TryGetValue(e_direction.right, out neighbor)) { neighbor.consider_direction(this, e_direction.left); }
-			}
-
-			private void derp_consider_direction(c_tile neighbor, e_direction direction, PriorityQueue<c_tile, int> queue)
-			{
-				// Is travelling through neighbor faster than my current best?
-				if (distance_to_end > neighbor.distance_to_end + neighbor.cost_to_enter)
-				{
-					distance_to_end = neighbor.distance_to_end + neighbor.cost_to_enter;
-					direction_to_end = direction;
-					neighbor_to_end = neighbor;
-
-					// derp();
-					queue.Enqueue(this, distance_to_end);
-				}
-			}
-
-			public void derp(PriorityQueue<c_tile, int> queue)
-			{
-				int distance = 3;
-				//for (int distance = 1; distance <= 3; distance++)
-				{
-					if (direction_to_end == e_direction.none || direction_to_end == e_direction.up || direction_to_end == e_direction.down)
+					if (search_node.tier >= min_straight_line - 1 &&
+						search_node.tier < max_straight_line &&
+						search_node.distance_from_start < min_distance_from_start)
 					{
-						c_tile neighbor = this;
-						for (int neighbors_count = 0; neighbors_count < distance && neighbor != null; neighbors_count++)
-						{
-							c_tile previous_neighbor = neighbor;
-							if (neighbor.neighbors.TryGetValue(e_direction.left, out neighbor))
-							{
-								neighbor.derp_consider_direction(previous_neighbor, e_direction.right, queue);
-							}
-						}
-
-						neighbor = this;
-						for (int neighbors_count = 0; neighbors_count < distance && neighbor != null; neighbors_count++)
-						{
-							c_tile previous_neighbor = neighbor;
-							if (neighbor.neighbors.TryGetValue(e_direction.right, out neighbor))
-							{
-								neighbor.derp_consider_direction(previous_neighbor, e_direction.left, queue);
-							}
-						}
+						min_distance_from_start = search_node.distance_from_start;
+						start_node = search_node;
 					}
+				});
 
-					if (direction_to_end == e_direction.none || direction_to_end == e_direction.left || direction_to_end == e_direction.right)
-					{
-						c_tile neighbor = this;
-						for (int neighbors_count = 0; neighbors_count < distance && neighbor != null; neighbors_count++)
-						{
-							c_tile previous_neighbor = neighbor;
-							if (neighbor.neighbors.TryGetValue(e_direction.up, out neighbor))
-							{
-								neighbor.derp_consider_direction(previous_neighbor, e_direction.down, queue);
-							}
-						}
-
-						neighbor = this;
-						for (int neighbors_count = 0; neighbors_count < distance && neighbor != null; neighbors_count++)
-						{
-							c_tile previous_neighbor = neighbor;
-							if (neighbor.neighbors.TryGetValue(e_direction.down, out neighbor))
-							{
-								neighbor.derp_consider_direction(previous_neighbor, e_direction.up, queue);
-							}
-						}
-					}
-				}
-			}
-
-			public void draw_path_to_end()
-			{
-				for (c_tile current = this; current != null; current = current.neighbor_to_end)
+				for (c_search_node current = start_node; current != null; current = current.search_node_from_start)
 				{
-					current.is_on_solution_path = true;
+					current.tile.is_on_solution_path = true;
+
+					current.tile.direction_from_start = current.direction_from_start;
+					current.tile.distance_from_start = current.distance_from_start;
 				}
 			}
 		}
@@ -230,97 +202,178 @@ namespace advent_of_code_2023.days
 		{
 			c_input_reader input_reader = new c_input_reader(input);
 
+			int row_count = 0;
 			List<c_tile[]> tiles_list = new List<c_tile[]>();
 
 			while (input_reader.has_more_lines())
 			{
+				int col_count = 0;
 				List<c_tile> tile_row = new List<c_tile>();
 
 				foreach (char tile_char in input_reader.read_line())
 				{
-					tile_row.Add(new c_tile(tile_char - '0'));
+					tile_row.Add(new c_tile(tile_char - '0', row_count, col_count));
+
+					col_count++;
 				}
 
 				tiles_list.Add(tile_row.ToArray());
+
+				row_count++;
 			}
 
-			c_tile[][] tiles = tiles_list.ToArray();
+			return tiles_list.ToArray();
+		}
 
-			// Link up neighbors
+		internal static void link_search_nodes(
+			c_tile[][] tiles,
+			int min_straight_line,
+			int max_straight_line)
+		{
 			for (int row = 0; row < tiles.Length; row++)
 			{
 				for (int col = 0; col < tiles[row].Length; col++)
 				{
+					c_tile source_tile = tiles[row][col];
+
 					if (row > 0)
 					{
-						tiles[row][col].neighbors[e_direction.up] = tiles[row - 1][col];
+						c_tile target_tile = tiles[row - 1][col];
+
+						for (int i = 0; i < max_straight_line - 1; i++)
+						{
+							source_tile.search_nodes[(e_direction.up, i)].neighbors[e_direction.up] =
+								target_tile.search_nodes[(e_direction.up, i + 1)];
+						}
+
+						for (int tier = min_straight_line - 1; tier < max_straight_line; tier++)
+						{
+							source_tile.search_nodes[(e_direction.right, tier)].neighbors[e_direction.up] =
+								target_tile.search_nodes[(e_direction.up, 0)];
+							source_tile.search_nodes[(e_direction.left, tier)].neighbors[e_direction.up] =
+								target_tile.search_nodes[(e_direction.up, 0)];
+						}
 					}
 
 					if (row < tiles.Length - 1)
 					{
-						tiles[row][col].neighbors[e_direction.down] = tiles[row + 1][col];
+						c_tile target_tile = tiles[row + 1][col];
+
+						for (int i = 0; i < max_straight_line - 1; i++)
+						{
+							source_tile.search_nodes[(e_direction.down, i)].neighbors[e_direction.down] =
+								target_tile.search_nodes[(e_direction.down, i + 1)];
+						}
+
+						for (int tier = min_straight_line - 1; tier < max_straight_line; tier++)
+						{
+							source_tile.search_nodes[(e_direction.left, tier)].neighbors[e_direction.down] =
+								target_tile.search_nodes[(e_direction.down, 0)];
+
+							source_tile.search_nodes[(e_direction.right, tier)].neighbors[e_direction.down] =
+								target_tile.search_nodes[(e_direction.down, 0)];
+						}
 					}
 
 					if (col > 0)
 					{
-						tiles[row][col].neighbors[e_direction.left] = tiles[row][col - 1];
+						c_tile target_tile = tiles[row][col - 1];
+
+						for (int i = 0; i < max_straight_line - 1; i++)
+						{
+							source_tile.search_nodes[(e_direction.left, 1)].neighbors[e_direction.left] =
+								target_tile.search_nodes[(e_direction.left, i + 1)];
+						}
+
+						for (int tier = min_straight_line - 1; tier < max_straight_line; tier++)
+						{
+							source_tile.search_nodes[(e_direction.up, tier)].neighbors[e_direction.left] =
+								target_tile.search_nodes[(e_direction.left, 0)];
+
+							source_tile.search_nodes[(e_direction.down, tier)].neighbors[e_direction.left] =
+								target_tile.search_nodes[(e_direction.left, 0)];
+						}
 					}
 
 					if (col < tiles[row].Length - 1)
 					{
-						tiles[row][col].neighbors[e_direction.right] = tiles[row][col + 1];
+						c_tile target_tile = tiles[row][col + 1];
+
+						for (int i = 0; i < max_straight_line - 1; i++)
+						{
+							source_tile.search_nodes[(e_direction.right, i)].neighbors[e_direction.right] =
+								target_tile.search_nodes[(e_direction.right, i + 1)];
+						}
+
+						for (int tier = min_straight_line - 1; tier < max_straight_line; tier++)
+						{
+							source_tile.search_nodes[(e_direction.down, tier)].neighbors[e_direction.right] =
+								target_tile.search_nodes[(e_direction.right, 0)];
+
+							source_tile.search_nodes[(e_direction.up, tier)].neighbors[e_direction.right] =
+								target_tile.search_nodes[(e_direction.right, 0)];
+						}
 					}
 				}
 			}
+		}
 
-			return tiles;
+		public static void part_worker(
+			string input,
+			bool pretty,
+			int min_straight_line,
+			int max_straight_line)
+		{
+			c_tile[][] tiles = parse_input(input, pretty);
+
+			link_search_nodes(tiles, min_straight_line, max_straight_line);
+
+			c_tile start = tiles[0][0];
+			c_tile end = tiles[tiles.Length - 1][tiles[0].Length - 1];
+
+			start.set_as_start();
+
+			PriorityQueue<c_search_node, int> queue = new PriorityQueue<c_search_node, int>();
+			start.enqueue_all_search_nodes(queue);
+
+			c_search_node element;
+			int priority;
+			while (queue.TryDequeue(out element, out priority))
+			{
+				element.try_neighbors_reconsider(queue);
+			}
+
+			end.draw_path_from_start(min_straight_line, max_straight_line);
+
+			if (pretty)
+			{
+				tiles.display(tile => tile.display());
+			}
+
+			Console.ForegroundColor = ConsoleColor.Green;
+			Console.WriteLine();
+			Console.WriteLine("Result = {0}", end.distance_from_start);
+			Console.ResetColor();
 		}
 
 		public static void part_1(
 			string input,
 			bool pretty)
 		{
-			c_tile[][] tiles = parse_input(input, pretty);
-
-			c_tile end = tiles[0][0];
-			c_tile start = tiles[tiles.Length - 1][tiles[0].Length - 1];
-
-			end.set_as_end();
-			//end.compute_neighbors_distance_to_me();
-			//end.derp();
-
-			PriorityQueue<c_tile, int> queue = new PriorityQueue<c_tile, int>();
-			queue.Enqueue(end, end.distance_to_end);
-
-			c_tile element;
-			int priority;
-			while (queue.TryDequeue(out element, out priority))
-			{
-				element.derp(queue);
-
-				// tiles.display(tile => tile.display(true));
-			}
-
-			start.draw_path_to_end();
-
-			tiles.display(tile => tile.display(true));
-
-			Console.ForegroundColor = ConsoleColor.Green;
-			Console.WriteLine();
-			Console.WriteLine("Result = {0}", start.distance_to_end);
-			Console.ResetColor();
+			part_worker(input, pretty, 1, 3);
 		}
 
 		public static void part_2(
 			string input,
 			bool pretty)
 		{
-			// parse_input(input, pretty);
+			part_worker(input, pretty, 4, 10);
 
-			Console.ForegroundColor = ConsoleColor.Green;
-			Console.WriteLine();
-			Console.WriteLine("Result = {0}", 0);
-			Console.ResetColor();
+			// too low: 1086
+
+			// too high: 1147
+
+			// nope: 1149
 		}
 	}
 }
