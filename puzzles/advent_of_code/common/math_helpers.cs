@@ -1,4 +1,5 @@
-﻿using System;
+﻿using advent_of_code_common.big_int_math;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -55,6 +56,25 @@ namespace advent_of_code_common.math_helpers
 			}
 
 			return lcm;
+		}
+
+		// Shoelace formula is a way to find the area of a polygon.
+		// assumes zn == 0
+		public static Int64 shoelace_formula(c_big_vector[] points)
+		{
+			Int64 xy_sum = 0;
+			Int64 yx_sum = 0;
+
+			for (int i = 0; i < points.Length - 1; i++)
+			{
+				xy_sum += points[i].x * points[i + 1].y;
+				yx_sum += points[i].y * points[i + 1].x;
+			}
+
+			xy_sum += points[points.Length - 1].x * points[0].y;
+			yx_sum += points[points.Length - 1].y * points[0].x;
+
+			return Math.Abs(xy_sum - yx_sum) / 2;
 		}
 	}
 }

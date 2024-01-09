@@ -1,4 +1,5 @@
-﻿using System;
+﻿using advent_of_code_common.int_math;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -349,6 +350,12 @@ namespace advent_of_code_common.extensions
                 0, border_size, source.GetLength(1));
 
             return destination;
+        }
+
+        public static bool is_valid_index<T>(this T[,] data, c_vector index)
+        {
+            return index.x >= 0 && index.x < data.GetLength(0)
+                && index.y >= 0 && index.y < data.GetLength(1);
         }
     }
 }
