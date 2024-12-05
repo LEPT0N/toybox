@@ -37,7 +37,7 @@ namespace advent_of_code_2024.days
 
 			Console.ForegroundColor = ConsoleColor.Green;
 			Console.WriteLine();
-			Console.WriteLine("Result = {0}", 0);
+			Console.WriteLine($"Result = {0}");
 			Console.ResetColor();
 		}
 
@@ -49,7 +49,7 @@ namespace advent_of_code_2024.days
 
 			Console.ForegroundColor = ConsoleColor.Green;
 			Console.WriteLine();
-			Console.WriteLine("Result = {0}", 0);
+			Console.WriteLine($"Result = {0}");
 			Console.ResetColor();
 		}
 	}
