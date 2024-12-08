@@ -6,10 +6,10 @@ namespace advent_of_code_common.int_math
 {
     [DebuggerDisplay("[{x}, {y}, {z}]", Type = "c_vector")]
     public class c_vector
-	{
-		public static readonly c_vector k_vector_zero = new c_vector(0, 0, 0);
+    {
+        public static readonly c_vector k_vector_zero = new c_vector(0, 0, 0);
 
-		public int x;
+        public int x;
         public int y;
         public int z;
 
@@ -77,25 +77,25 @@ namespace advent_of_code_common.int_math
                 x + other.x,
                 y + other.y,
                 z + other.z);
-		}
+        }
 
-		public c_vector subtract(c_vector other)
-		{
-			return new c_vector(
-				x - other.x,
-				y - other.y,
-				z - other.z);
-		}
+        public c_vector subtract(c_vector other)
+        {
+            return new c_vector(
+                x - other.x,
+                y - other.y,
+                z - other.z);
+        }
 
-		public c_vector scale(int value)
-		{
-			return new c_vector(
-				x * value,
-				y * value,
-				z * value);
-		}
+        public c_vector scale(int value)
+        {
+            return new c_vector(
+                x * value,
+                y * value,
+                z * value);
+        }
 
-		public void normalize()
+        public void normalize()
         {
             x = Math.Max(-1, Math.Min(1, x));
             y = Math.Max(-1, Math.Min(1, y));

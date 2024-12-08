@@ -6,10 +6,10 @@ namespace advent_of_code_common.big_int_math
 {
     [DebuggerDisplay("[{x}, {y}, {z}]", Type = "c_big_vector")]
     public class c_big_vector
-	{
-		public static readonly c_big_vector k_vector_zero = new c_big_vector(0, 0, 0);
+    {
+        public static readonly c_big_vector k_vector_zero = new c_big_vector(0, 0, 0);
 
-		public Int64 x;
+        public Int64 x;
         public Int64 y;
         public Int64 z;
 
@@ -59,7 +59,7 @@ namespace advent_of_code_common.big_int_math
         }
 
         public Int64 taxi_distance(
-			c_big_vector other)
+            c_big_vector other)
         {
             return Math.Abs(x - other.x)
                 + Math.Abs(y - other.y)
@@ -77,15 +77,15 @@ namespace advent_of_code_common.big_int_math
                 x + other.x,
                 y + other.y,
                 z + other.z);
-		}
+        }
 
-		public c_big_vector scale(Int64 value)
-		{
-			return new c_big_vector(
-				x * value,
-				y * value,
-				z * value);
-		}
+        public c_big_vector scale(Int64 value)
+        {
+            return new c_big_vector(
+                x * value,
+                y * value,
+                z * value);
+        }
     }
 
     public class c_big_vector_comparer : IEqualityComparer<c_big_vector>

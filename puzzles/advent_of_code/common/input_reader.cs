@@ -14,7 +14,7 @@ namespace advent_of_code_common.input_reader
 
                 // Search the current directory
                 string local_path = Path.Combine(Directory.GetCurrentDirectory(), input);
-                
+
                 if (Path.Exists(local_path))
                 {
                     input = local_path;
@@ -25,7 +25,7 @@ namespace advent_of_code_common.input_reader
                     DirectoryInfo directory = new DirectoryInfo(Directory.GetCurrentDirectory());
                     directory = directory.Parent.Parent.Parent;
                     string project_path = Path.Combine(directory.FullName, input);
-                    
+
                     if (Path.Exists(project_path))
                     {
                         input = project_path;
@@ -34,7 +34,7 @@ namespace advent_of_code_common.input_reader
                     {
                         throw new ArgumentException("Unable to find input '{input}'");
                     }
-				}
+                }
             }
 
             m_line_number = 0;
