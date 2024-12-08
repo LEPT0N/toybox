@@ -79,6 +79,14 @@ namespace advent_of_code_common.int_math
                 z + other.z);
 		}
 
+		public c_vector subtract(c_vector other)
+		{
+			return new c_vector(
+				x - other.x,
+				y - other.y,
+				z - other.z);
+		}
+
 		public c_vector scale(int value)
 		{
 			return new c_vector(
