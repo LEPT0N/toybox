@@ -107,7 +107,8 @@ namespace advent_of_code_2024.days
 
         public static c_cell[][] part_worker(
             c_input_reader input_reader,
-            bool pretty)
+            bool pretty,
+            Action<c_cell> display_action)
         {
             c_cell[][] board = parse_input(input_reader, pretty);
 
@@ -126,6 +127,8 @@ namespace advent_of_code_2024.days
                         Console.Write(cell.height);
                     }
                 });
+
+                board.display(display_action);
             }
 
             // Scan through each height from top to bottom.
@@ -172,6 +175,11 @@ namespace advent_of_code_2024.days
                         }
                     }
                 }
+
+                if (pretty)
+                {
+                    board.display(display_action);
+                }
             }
 
             return board;
@@ -181,24 +189,21 @@ namespace advent_of_code_2024.days
             c_input_reader input_reader,
             bool pretty)
         {
-            c_cell[][] board = part_worker(input_reader, pretty);
-
-            if (pretty)
+            Action<c_cell> display_action = cell =>
             {
-                board.display(cell =>
-                {
-                    Console.ForegroundColor = cell.display_color;
+                Console.ForegroundColor = cell.display_color;
 
-                    if (cell.height == k_invalid_height)
-                    {
-                        Console.Write(' ');
-                    }
-                    else
-                    {
-                        Console.Write(cell.reachable_tops.Count);
-                    }
-                });
-            }
+                if (cell.reachable_tops.Any())
+                {
+                    Console.Write(cell.reachable_tops.Count);
+                }
+                else
+                {
+                    Console.Write(' ');
+                }
+            };
+
+            c_cell[][] board = part_worker(input_reader, pretty, display_action);
 
             int result = board
                 .Sum(row => row
@@ -215,28 +220,29 @@ namespace advent_of_code_2024.days
             c_input_reader input_reader,
             bool pretty)
         {
-            c_cell[][] board = part_worker(input_reader, pretty);
-
-            if (pretty)
+            Action<c_cell> display_action = cell =>
             {
-                board.display(cell =>
-                {
-                    Console.ForegroundColor = cell.display_color;
+                Console.ForegroundColor = cell.display_color;
 
-                    if (cell.height == k_invalid_height)
-                    {
-                        Console.Write(' ');
-                    }
-                    else if (cell.valid_paths_to_a_top > 9)
-                    {
-                        Console.Write('!');
-                    }
-                    else
-                    {
-                        Console.Write(cell.valid_paths_to_a_top);
-                    }
-                });
-            }
+                if (cell.height == k_invalid_height)
+                {
+                    Console.Write(' ');
+                }
+                else if (cell.valid_paths_to_a_top > 9)
+                {
+                    Console.Write('!');
+                }
+                else if (cell.valid_paths_to_a_top > 0)
+                {
+                    Console.Write(cell.valid_paths_to_a_top);
+                }
+                else
+                {
+                    Console.Write(' ');
+                }
+            };
+
+            c_cell[][] board = part_worker(input_reader, pretty, display_action);
 
             int result = board
                 .Sum(row => row
