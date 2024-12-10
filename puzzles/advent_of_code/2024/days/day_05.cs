@@ -91,11 +91,9 @@ namespace advent_of_code_2024.days
         }
 
         internal static (s_rule[], s_page[][]) parse_input(
-            in string input,
+            in c_input_reader input_reader,
             in bool pretty)
         {
-            c_input_reader input_reader = new c_input_reader(input);
-
             // Read the rules
 
             List<s_rule> rules = new List<s_rule>();
@@ -181,10 +179,10 @@ namespace advent_of_code_2024.days
         }
 
         public static void part_1(
-            string input,
+            c_input_reader input_reader,
             bool pretty)
         {
-            (s_rule[] rules, s_page[][] page_lists) = parse_input(input, pretty);
+            (s_rule[] rules, s_page[][] page_lists) = parse_input(input_reader, pretty);
 
             // filter to only page lists that satisfy all rules,
             // Then find the middle value in each one,
@@ -270,10 +268,10 @@ namespace advent_of_code_2024.days
         // other option: is there one true ordering?
 
         public static void part_2(
-            string input,
+            c_input_reader input_reader,
             bool pretty)
         {
-            (s_rule[] rules, s_page[][] page_lists) = parse_input(input, pretty);
+            (s_rule[] rules, s_page[][] page_lists) = parse_input(input_reader, pretty);
 
             s_page[][] pretty_page_lists = null;
             s_page[][] pretty_fixed_page_lists = null;

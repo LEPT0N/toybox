@@ -8,11 +8,9 @@ namespace advent_of_code_2024.days
     internal class day_02
     {
         internal static int[][] parse_input(
-            in string input,
+            in c_input_reader input_reader,
             in bool pretty)
         {
-            c_input_reader input_reader = new c_input_reader(input);
-
             List<int[]> reports = new List<int[]>();
 
             while (input_reader.has_more_lines())
@@ -49,10 +47,10 @@ namespace advent_of_code_2024.days
         }
 
         public static void part_1(
-            string input,
+            c_input_reader input_reader,
             bool pretty)
         {
-            int[][] reports = parse_input(input, pretty);
+            int[][] reports = parse_input(input_reader, pretty);
 
             int safe_report_count = 0;
 
@@ -71,10 +69,10 @@ namespace advent_of_code_2024.days
         }
 
         public static void part_2(
-            string input,
+            c_input_reader input_reader,
             bool pretty)
         {
-            int[][] reports = parse_input(input, pretty);
+            int[][] reports = parse_input(input_reader, pretty);
 
             int safe_report_count = 0;
 

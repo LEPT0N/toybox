@@ -18,11 +18,9 @@ namespace advent_of_code_2024.days
         }
 
         internal static void parse_input(
-            in string input,
+            in c_input_reader input_reader,
             in bool pretty)
         {
-            c_input_reader input_reader = new c_input_reader(input);
-
             while (input_reader.has_more_lines())
             {
                 input_reader.read_line();
@@ -30,10 +28,10 @@ namespace advent_of_code_2024.days
         }
 
         public static void part_1(
-            string input,
+            c_input_reader input_reader,
             bool pretty)
         {
-            parse_input(input, pretty);
+            parse_input(input_reader, pretty);
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine();
@@ -42,10 +40,10 @@ namespace advent_of_code_2024.days
         }
 
         public static void part_2(
-            string input,
+            c_input_reader input_reader,
             bool pretty)
         {
-            // parse_input(input, pretty);
+            // parse_input(input_reader, pretty);
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine();

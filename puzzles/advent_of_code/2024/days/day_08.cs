@@ -143,11 +143,9 @@ namespace advent_of_code_2024.days
         }
 
         internal static c_board parse_input(
-            in string input,
+            in c_input_reader input_reader,
             in bool pretty)
         {
-            c_input_reader input_reader = new c_input_reader(input);
-
             List<char[]> input_grid = new List<char[]>();
 
             while (input_reader.has_more_lines())
@@ -159,10 +157,10 @@ namespace advent_of_code_2024.days
         }
 
         public static void part_1(
-            string input,
+            c_input_reader input_reader,
             bool pretty)
         {
-            c_board board = parse_input(input, pretty);
+            c_board board = parse_input(input_reader, pretty);
 
             int result = board.find_antinodes();
 
@@ -178,10 +176,10 @@ namespace advent_of_code_2024.days
         }
 
         public static void part_2(
-            string input,
+            c_input_reader input_reader,
             bool pretty)
         {
-            c_board board = parse_input(input, pretty);
+            c_board board = parse_input(input_reader, pretty);
 
             int result = board.find_harmonic_antinodes();
 

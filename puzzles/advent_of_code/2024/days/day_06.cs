@@ -422,10 +422,10 @@ namespace advent_of_code_2024.days
         }
 
         public static void part_1(
-            string input,
+            c_input_reader input_reader,
             bool pretty)
         {
-            c_board board = new c_board(new c_input_reader(input));
+            c_board board = new c_board(input_reader);
 
             if (pretty)
             {
@@ -446,10 +446,10 @@ namespace advent_of_code_2024.days
         }
 
         public static void part_2(
-            string input,
+            c_input_reader input_reader,
             bool pretty)
         {
-            c_board starting_board = new c_board(new c_input_reader(input));
+            c_board starting_board = new c_board(input_reader);
 
             // Generate the initial path to the exit. The visited spots here are where we can try putting the new blocks.
 

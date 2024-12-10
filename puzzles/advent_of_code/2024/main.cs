@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using advent_of_code_2024.days;
+using advent_of_code_common.input_reader;
 
 namespace advent_of_code_2024
 {
@@ -13,8 +14,8 @@ namespace advent_of_code_2024
             int day = Int32.Parse(args[0]);
             int part = Int32.Parse(args[1]);
 
-            string input = args[2];
-            input = input.Replace("{day}", $"{day:00}");
+            string input_file = args[2];
+            input_file = input_file.Replace("{day}", $"{day:00}");
 
             bool pretty = (args.Length >= 4 && args[3] == "pretty");
 
@@ -33,6 +34,8 @@ namespace advent_of_code_2024
 
                 return;
             }
+
+            c_input_reader input = new c_input_reader(input_file);
 
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();

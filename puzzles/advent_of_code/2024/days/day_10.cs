@@ -79,11 +79,9 @@ namespace advent_of_code_2024.days
         }
 
         internal static c_cell[][] parse_input(
-            in string input,
+            in c_input_reader input_reader,
             in bool pretty)
         {
-            c_input_reader input_reader = new c_input_reader(input);
-
             int row = 0;
             List<c_cell[]> result = new List<c_cell[]>();
 
@@ -108,10 +106,10 @@ namespace advent_of_code_2024.days
         }
 
         public static c_cell[][] part_worker(
-            string input,
+            c_input_reader input_reader,
             bool pretty)
         {
-            c_cell[][] board = parse_input(input, pretty);
+            c_cell[][] board = parse_input(input_reader, pretty);
 
             if (pretty)
             {
@@ -180,10 +178,10 @@ namespace advent_of_code_2024.days
         }
 
         public static void part_1(
-            string input,
+            c_input_reader input_reader,
             bool pretty)
         {
-            c_cell[][] board = part_worker(input, pretty);
+            c_cell[][] board = part_worker(input_reader, pretty);
 
             if (pretty)
             {
@@ -214,10 +212,10 @@ namespace advent_of_code_2024.days
         }
 
         public static void part_2(
-            string input,
+            c_input_reader input_reader,
             bool pretty)
         {
-            c_cell[][] board = part_worker(input, pretty);
+            c_cell[][] board = part_worker(input_reader, pretty);
 
             if (pretty)
             {

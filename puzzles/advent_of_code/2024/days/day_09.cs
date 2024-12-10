@@ -38,11 +38,9 @@ namespace advent_of_code_2024.days
         }
 
         internal static c_cell[] parse_input_part1(
-            in string input,
+            in c_input_reader input_reader,
             in bool pretty)
         {
-            c_input_reader input_reader = new c_input_reader(input);
-
             Int64 next_file_id = 0;
             bool is_file = true;
 
@@ -101,10 +99,10 @@ namespace advent_of_code_2024.days
         }
 
         public static void part_1(
-            string input,
+            c_input_reader input_reader,
             bool pretty)
         {
-            c_cell[] blocks = parse_input_part1(input, pretty);
+            c_cell[] blocks = parse_input_part1(input_reader, pretty);
 
             if (pretty)
             {
@@ -199,11 +197,9 @@ namespace advent_of_code_2024.days
         }
 
         internal static LinkedList<c_block> parse_input_part2(
-            in string input,
+            c_input_reader input_reader,
             in bool pretty)
         {
-            c_input_reader input_reader = new c_input_reader(input);
-
             Int64 next_file_id = 0;
             bool is_file = true;
 
@@ -234,10 +230,10 @@ namespace advent_of_code_2024.days
         }
 
         public static void part_2(
-            string input,
+            c_input_reader input_reader,
             bool pretty)
         {
-            LinkedList<c_block> blocks = parse_input_part2(input, pretty);
+            LinkedList<c_block> blocks = parse_input_part2(input_reader, pretty);
 
             if (pretty)
             {

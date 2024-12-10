@@ -8,11 +8,9 @@ namespace advent_of_code_2024.days
     internal class day_01
     {
         internal static (int[], int[]) parse_input(
-            in string input,
+            in c_input_reader input_reader,
             in bool pretty)
         {
-            c_input_reader input_reader = new c_input_reader(input);
-
             List<int> first = new List<int>();
             List<int> second = new List<int>();
 
@@ -33,10 +31,10 @@ namespace advent_of_code_2024.days
         }
 
         public static void part_1(
-            string input,
+            c_input_reader input_reader,
             bool pretty)
         {
-            (int[] first, int[] second) = parse_input(input, pretty);
+            (int[] first, int[] second) = parse_input(input_reader, pretty);
 
             Array.Sort(first);
             Array.Sort(second);
@@ -56,10 +54,10 @@ namespace advent_of_code_2024.days
         }
 
         public static void part_2(
-            string input,
+            c_input_reader input_reader,
             bool pretty)
         {
-            (int[] first, int[] second) = parse_input(input, pretty);
+            (int[] first, int[] second) = parse_input(input_reader, pretty);
 
             int result = 0;
 

@@ -7,11 +7,9 @@ namespace advent_of_code_2024.days
     internal class day_03
     {
         public static void part_1(
-            string input,
+            c_input_reader input_reader,
             bool pretty)
         {
-            c_input_reader input_reader = new c_input_reader(input);
-
             Regex mul_format = new Regex(@"mul\((\d{1,3}),(\d{1,3})\)");
 
             int result = 0;
@@ -38,11 +36,9 @@ namespace advent_of_code_2024.days
         }
 
         public static void part_2(
-            string input,
+            c_input_reader input_reader,
             bool pretty)
         {
-            c_input_reader input_reader = new c_input_reader(input);
-
             Regex mul_format = new Regex(@"mul\((\d{1,3}),(\d{1,3})\)|(do\(\))|(don't\(\))");
 
             int result = 0;

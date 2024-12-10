@@ -105,12 +105,10 @@ namespace advent_of_code_2024.days
         }
 
         internal static c_equation[] parse_input(
-            in string input,
+            in c_input_reader input_reader,
             in bool allow_concatenation,
             in bool pretty)
         {
-            c_input_reader input_reader = new c_input_reader(input);
-
             List<c_equation> equations = new List<c_equation>();
 
             while (input_reader.has_more_lines())
@@ -122,11 +120,11 @@ namespace advent_of_code_2024.days
         }
 
         private static void part_worker(
-            string input,
+            c_input_reader input_reader,
             bool allow_concatenation,
             bool pretty)
         {
-            c_equation[] equations = parse_input(input, allow_concatenation, pretty);
+            c_equation[] equations = parse_input(input_reader, allow_concatenation, pretty);
 
             (c_equation, string)[] valid_equations = equations
                 .Select(e => (e, e.try_get_solution()))
@@ -152,17 +150,17 @@ namespace advent_of_code_2024.days
         }
 
         public static void part_1(
-            string input,
+            c_input_reader input_reader,
             bool pretty)
         {
-            part_worker(input, false, pretty);
+            part_worker(input_reader, false, pretty);
         }
 
         public static void part_2(
-            string input,
+            c_input_reader input_reader,
             bool pretty)
         {
-            part_worker(input, true, pretty);
+            part_worker(input_reader, true, pretty);
         }
     }
 }
