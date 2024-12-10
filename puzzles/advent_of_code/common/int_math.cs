@@ -7,11 +7,14 @@ namespace advent_of_code_common.int_math
     [DebuggerDisplay("[{x}, {y}, {z}]", Type = "c_vector")]
     public class c_vector
     {
-        public static readonly c_vector k_vector_zero = new c_vector(0, 0, 0);
+        public static c_vector k_vector_zero { get { return new c_vector(0, 0, 0); } }
 
         public int x;
         public int y;
         public int z;
+
+        public int row { get { return x; } set { x = value; } }
+        public int col { get { return y; } set { y = value; } }
 
         public c_vector(int input_x, int input_y, int input_z)
         {
