@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using advent_of_code_common.display_helpers;
 using advent_of_code_common.extensions;
 using advent_of_code_common.input_reader;
 using advent_of_code_common.int_math;
@@ -10,6 +11,36 @@ namespace advent_of_code_2024.days
 {
     internal class day_12
     {
+        [DebuggerDisplay("[{group_color_index}] = {group_colors[group_color_index]}", Type = "c_group_color")]
+        internal class c_group_color()
+        {
+            private static readonly ConsoleColor[] group_colors =
+            {
+                ConsoleColor.Red,
+                ConsoleColor.Yellow,
+                ConsoleColor.Green,
+                ConsoleColor.Cyan,
+                ConsoleColor.Blue,
+                ConsoleColor.Magenta,
+
+                ConsoleColor.DarkRed,
+                ConsoleColor.DarkYellow,
+                ConsoleColor.DarkGreen,
+                ConsoleColor.DarkCyan,
+                ConsoleColor.DarkBlue,
+                ConsoleColor.DarkMagenta,
+            };
+
+            private static int group_color_index = -1;
+
+            public static ConsoleColor get_next()
+            {
+                group_color_index = (group_color_index + 1) % group_colors.Length;
+
+                return group_colors[group_color_index];
+            }
+        }
+
         [DebuggerDisplay("{plant_type} {position} {grouped}", Type = "c_plot")]
         internal class c_plot
         {
@@ -17,6 +48,7 @@ namespace advent_of_code_2024.days
             public readonly c_vector position;
 
             public bool grouped;
+            public ConsoleColor group_color = ConsoleColor.DarkGray;
             public bool[] fences;
 
             public c_plot(
@@ -27,6 +59,12 @@ namespace advent_of_code_2024.days
                 position = new c_vector(p);
                 grouped = false;
                 fences = Enumerable.Repeat(false, 4).ToArray();
+            }
+
+            public void display()
+            {
+                Console.ForegroundColor = group_color;
+                Console.Write(plant_type);
             }
         }
 
@@ -69,12 +107,14 @@ namespace advent_of_code_2024.days
 
         internal static (int, int) measure_group_1(
             c_plot[][] plots,
-            c_vector position)
+            c_vector position,
+            ConsoleColor group_color)
         {
             int area = 1;
             int perimeter = 0;
 
             plots[position.row][position.col].grouped = true;
+            plots[position.row][position.col].group_color = group_color;
 
             foreach (c_vector neighbor_direction in k_neighbor_directions)
             {
@@ -85,7 +125,7 @@ namespace advent_of_code_2024.days
                 {
                     if (!plots[neighbor_position.row][neighbor_position.col].grouped)
                     {
-                        (int neighbor_area, int neighbor_perimeter) = measure_group_1(plots, neighbor_position);
+                        (int neighbor_area, int neighbor_perimeter) = measure_group_1(plots, neighbor_position, group_color);
 
                         area += neighbor_area;
                         perimeter += neighbor_perimeter;
@@ -107,6 +147,11 @@ namespace advent_of_code_2024.days
         {
             c_plot[][] plots = parse_input(input_reader, pretty);
 
+            if (pretty)
+            {
+                plots.display(plot => plot.display());
+            }
+
             c_vector position = new c_vector();
 
             int result = 0;
@@ -117,11 +162,16 @@ namespace advent_of_code_2024.days
                 {
                     if (!plots[position.row][position.col].grouped)
                     {
-                        (int area, int perimeter) = measure_group_1(plots, position);
+                        (int area, int perimeter) = measure_group_1(plots, position, c_group_color.get_next());
 
                         result += area * perimeter;
                     }
                 }
+            }
+
+            if (pretty)
+            {
+                plots.display(plot => plot.display());
             }
 
             Console.ForegroundColor = ConsoleColor.Green;
@@ -165,12 +215,14 @@ namespace advent_of_code_2024.days
 
         internal static (int, int) measure_group_2(
             c_plot[][] plots,
-            c_vector position)
+            c_vector position,
+            ConsoleColor group_color)
         {
             int area = 1;
             int perimeter = 0;
 
             plots[position.row][position.col].grouped = true;
+            plots[position.row][position.col].group_color = group_color;
 
             for (int neighbor_index = 0; neighbor_index < k_neighbors.Length; neighbor_index++)
             {
@@ -181,7 +233,7 @@ namespace advent_of_code_2024.days
                 {
                     if (!plots[neighbor_position.row][neighbor_position.col].grouped)
                     {
-                        (int neighbor_area, int neighbor_perimeter) = measure_group_2(plots, neighbor_position);
+                        (int neighbor_area, int neighbor_perimeter) = measure_group_2(plots, neighbor_position, group_color);
 
                         area += neighbor_area;
                         perimeter += neighbor_perimeter;
@@ -246,6 +298,11 @@ namespace advent_of_code_2024.days
         {
             c_plot[][] plots = parse_input(input_reader, pretty);
 
+            if (pretty)
+            {
+                plots.display(plot => plot.display());
+            }
+
             c_vector position = new c_vector();
 
             int result = 0;
@@ -256,11 +313,16 @@ namespace advent_of_code_2024.days
                 {
                     if (!plots[position.row][position.col].grouped)
                     {
-                        (int area, int perimeter) = measure_group_2(plots, position);
+                        (int area, int perimeter) = measure_group_2(plots, position, c_group_color.get_next());
 
                         result += area * perimeter;
                     }
                 }
+            }
+
+            if (pretty)
+            {
+                plots.display(plot => plot.display());
             }
 
             Console.ForegroundColor = ConsoleColor.Green;
