@@ -352,6 +352,12 @@ namespace advent_of_code_common.extensions
             return destination;
         }
 
+        public static bool is_valid_index<T>(this T[][] data, c_vector index)
+        {
+            return index.x >= 0 && index.x < data.Length
+                && index.y >= 0 && index.y < data[index.x].Length;
+        }
+
         public static bool is_valid_index<T>(this T[,] data, c_vector index)
         {
             return index.x >= 0 && index.x < data.GetLength(0)
