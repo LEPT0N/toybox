@@ -50,6 +50,11 @@ namespace advent_of_code_common.input_reader
             return result;
         }
 
+        public string try_read_line()
+        {
+            return has_more_lines() ? read_line() : null;
+        }
+
         public string[] read_all_lines()
         {
             return m_lines;
