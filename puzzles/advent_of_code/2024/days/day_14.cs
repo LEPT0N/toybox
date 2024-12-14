@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
+using System.IO;
 using System.Linq;
 using advent_of_code_common.display_helpers;
 using advent_of_code_common.input_reader;
@@ -147,22 +149,54 @@ namespace advent_of_code_2024.days
             Console.WriteLine();
         }
 
+        public static void save_to_bitmap(
+            int[,] picture,
+            int seconds,
+            int scale = 1)
+        {
+            using (Bitmap bitmap = new Bitmap(picture.GetLength(1), picture.GetLength(0)))
+            {
+                for (int x = 0; x < picture.GetLength(0); x++)
+                {
+                    for (int y = 0; y < picture.GetLength(1); y++)
+                    {
+                        if (picture[x, y] > 0)
+                        {
+                            bitmap.SetPixel(y, x, Color.Green);
+                        }
+                    }
+                }
+
+                Directory.CreateDirectory("output");
+
+                bitmap.Save($"output\\seconds_{seconds}.bmp");
+            }
+        }
+
         public static void part_2_search_mode(
             c_robot[] robots,
+            bool pretty,
             c_vector bounds)
         {
             string latest_input = null;
             int seconds = 0;
 
+            int step_count = pretty ? 1000 : 10;
+
             while (latest_input != "end")
             {
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("####################################################################################################");
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("####################################################################################################");
-                Console.ResetColor();
+                if (!pretty)
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.WriteLine("####################################################################################################");
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine("####################################################################################################");
+                    Console.ResetColor();
+                }
+                Console.WriteLine("Generating...");
+                Console.WriteLine();
 
-                for (int i = 1; i <= 10; i++)
+                for (int i = 1; i <= step_count; i++)
                 {
                     seconds++;
 
@@ -175,15 +209,24 @@ namespace advent_of_code_2024.days
                         picture[robot.position.y, robot.position.x]++;
                     }
 
-                    part_2_display(picture, seconds);
+                    if (pretty)
+                    {
+                        save_to_bitmap(picture, seconds);
+                    }
+                    else
+                    {
+                        part_2_display(picture, seconds);
+                    }
                 }
 
+                Console.WriteLine("Done. Press <Enter> to generate more.");
                 latest_input = Console.ReadLine();
             }
         }
 
         public static void part_2_destroy_mode(
             c_robot[] robots,
+            bool pretty,
             c_vector bounds,
             int mod_x_result,
             int mod_y_result)
@@ -205,6 +248,11 @@ namespace advent_of_code_2024.days
             }
 
             part_2_display(picture, seconds);
+
+            if (pretty)
+            {
+                save_to_bitmap(picture, seconds);
+            }
         }
 
         public static void part_2(
@@ -216,17 +264,21 @@ namespace advent_of_code_2024.days
             // c_vector bounds = new c_vector(11, 7, 1);
             c_vector bounds = new c_vector(101, 103, 1);
 
-            if (!pretty)
+            if (main.options.Contains("search"))
             {
-                part_2_search_mode(robots, bounds);
+                part_2_search_mode(robots, pretty, bounds);
             }
-            else
+            else if (main.options.Contains("destroy"))
             {
                 // Using search mode, I found that there were hotizontal and vertical clusterings when the following were true:
                 // seconds mod 101 == 72
                 // seconds mod 103 == 31
                 // Found from noticing seconds = 31, 72, 134, and 173.
-                part_2_destroy_mode(robots, bounds, 72, 31);
+                part_2_destroy_mode(robots, pretty, bounds, 72, 31);
+            }
+            else
+            {
+                throw new ArgumentException("No option specified");
             }
         }
     }

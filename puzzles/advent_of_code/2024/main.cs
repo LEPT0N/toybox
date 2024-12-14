@@ -1,23 +1,33 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using advent_of_code_2024.days;
+using advent_of_code_common.extensions;
 using advent_of_code_common.input_reader;
 
 namespace advent_of_code_2024
 {
     internal class main
     {
+        public static bool pretty { get; private set; }
+        public static HashSet<string> options { get; private set; }
+
         static void Main(string[] args)
         {
-            int day = Int32.Parse(args[0]);
-            int part = Int32.Parse(args[1]);
+            List<string> arguments = args.ToList();
 
-            string input_file = args[2];
+            int day = Int32.Parse(arguments.remove_first());
+            int part = Int32.Parse(arguments.remove_first());
+
+            string input_file = arguments.remove_first();
             input_file = input_file.Replace("{day}", $"{day:00}");
 
-            bool pretty = (args.Length >= 4 && args[3] == "pretty");
+            options = new HashSet<string>(args.Skip(3));
+
+            pretty = options.Contains("pretty");
 
             string class_name = $"advent_of_code_2024.days.day_{day:00}";
             Type class_type = Type.GetType(class_name);

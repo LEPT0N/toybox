@@ -181,6 +181,15 @@ namespace advent_of_code_common.extensions
             return sum;
         }
 
+        public static T remove_first<T>(this List<T> list)
+        {
+            T first = list.First();
+
+            list.RemoveAt(0);
+
+            return first;
+        }
+
         public static T[,] to_2d_array<T>(this List<List<T>> array)
         {
             if (array.Count == 0 || array[0].Count == 0)
