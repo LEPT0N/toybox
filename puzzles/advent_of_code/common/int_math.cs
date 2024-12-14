@@ -98,6 +98,14 @@ namespace advent_of_code_common.int_math
                 z * value);
         }
 
+        public c_vector mod(c_vector other)
+        {
+            return new c_vector(
+                x % other.x,
+                y % other.y,
+                z % other.z);
+        }
+
         public void normalize()
         {
             x = Math.Max(-1, Math.Min(1, x));
