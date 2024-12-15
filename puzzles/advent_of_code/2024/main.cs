@@ -25,7 +25,7 @@ namespace advent_of_code_2024
             string input_file = arguments.remove_first();
             input_file = input_file.Replace("{day}", $"{day:00}");
 
-            options = new HashSet<string>(args.Skip(3));
+            options = new HashSet<string>(arguments);
 
             pretty = options.Contains("pretty");
 
