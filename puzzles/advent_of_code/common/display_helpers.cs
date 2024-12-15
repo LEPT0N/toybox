@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -120,6 +121,35 @@ namespace advent_of_code_common.display_helpers
             }
 
             display_utilities.display_grid_bottom(grid[0].Length);
+        }
+
+        public static Bitmap create_bitmap<T>(
+            this T[][] grid,
+            int scale,
+            Func<T, Color> get_pixel_color)
+        {
+            Bitmap bitmap = new Bitmap(grid[0].Length * scale, grid.Length * scale);
+
+            for (int y = 0; y < grid.Length; y++)
+            {
+                for (int x = 0; x < grid[y].Length; x++)
+                {
+                    Color cell_color = get_pixel_color(grid[y][x]);
+
+                    int x_start = x * scale;
+                    int y_start = y * scale;
+
+                    for (int x_offset = 0; x_offset < scale; x_offset++)
+                    {
+                        for (int y_offset = 0; y_offset < scale; y_offset++)
+                        {
+                            bitmap.SetPixel(x_start + x_offset, y_start + y_offset, cell_color);
+                        }
+                    }
+                }
+            }
+
+            return bitmap;
         }
     }
 }

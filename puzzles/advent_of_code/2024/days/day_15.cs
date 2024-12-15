@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
 using advent_of_code_common.display_helpers;
 using advent_of_code_common.input_reader;
 using advent_of_code_common.int_math;
@@ -187,6 +189,31 @@ namespace advent_of_code_2024.days
             return result;
         }
 
+        internal static void create_bitmap(
+            e_cell_state[][] cells,
+            string file_name)
+        {
+            Bitmap bitmap = cells.create_bitmap(10, cell_state =>
+            {
+                Color cell_color = Color.Black;
+
+                switch (cell_state)
+                {
+                    case e_cell_state.wall: cell_color = Color.White; break;
+                    case e_cell_state.box: cell_color = Color.DarkRed; break;
+                    case e_cell_state.box_left: cell_color = Color.DarkRed; break;
+                    case e_cell_state.box_right: cell_color = Color.DarkRed; break;
+                    case e_cell_state.robot: cell_color = Color.Green; break;
+                }
+
+                return cell_color;
+            });
+
+            Directory.CreateDirectory("output");
+
+            bitmap.Save($"output\\{file_name}");
+        }
+
         public static void part_1(
             c_input_reader input_reader,
             bool pretty)
@@ -249,6 +276,11 @@ namespace advent_of_code_2024.days
             if (!pretty)
             {
                 cells.display(cell => display_cell(cell));
+            }
+
+            if (main.options.Contains("bmp"))
+            {
+                create_bitmap(cells, "day_15_part_1.bmp");
             }
 
             int result = calculate_result(cells);
@@ -451,6 +483,11 @@ namespace advent_of_code_2024.days
             if (!pretty)
             {
                 cells.display(cell => display_cell(cell));
+            }
+
+            if (main.options.Contains("bmp"))
+            {
+                create_bitmap(cells, "day_15_part_2.bmp");
             }
 
             int result = calculate_result(cells);
