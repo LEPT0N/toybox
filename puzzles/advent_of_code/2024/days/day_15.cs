@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using advent_of_code_common.display_helpers;
 using advent_of_code_common.input_reader;
@@ -217,7 +218,7 @@ namespace advent_of_code_2024.days
         {
             Directory.CreateDirectory("output");
 
-            bitmap.Save($"output\\{file_name}.bmp");
+            bitmap.Save($"output\\{file_name}.png", ImageFormat.Png);
         }
 
         internal static void save_gif(
