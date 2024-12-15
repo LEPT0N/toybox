@@ -190,8 +190,8 @@ namespace advent_of_code_2024.days
         }
 
         internal static void create_bitmap(
-            e_cell_state[][] cells,
-            string file_name)
+        internal static Bitmap create_bitmap(
+            e_cell_state[][] cells)
         {
             Bitmap bitmap = cells.create_bitmap(10, cell_state =>
             {
@@ -209,9 +209,27 @@ namespace advent_of_code_2024.days
                 return cell_color;
             });
 
+            return bitmap;
+        }
+
+        internal static void save_bitmap(
+            Bitmap bitmap,
+            string file_name)
+        {
             Directory.CreateDirectory("output");
 
-            bitmap.Save($"output\\{file_name}");
+            bitmap.Save($"output\\{file_name}.bmp");
+        }
+
+        internal static void save_gif(
+            List <Bitmap> frames,
+            string file_name)
+        {
+            MemoryStream stream = frames.create_gif();
+
+            Directory.CreateDirectory("output");
+
+            File.WriteAllBytes($"output\\{file_name}.gif", stream.ToArray());
         }
 
         public static void part_1(
@@ -219,6 +237,14 @@ namespace advent_of_code_2024.days
             bool pretty)
         {
             (c_vector robot, e_cell_state[][] cells, c_vector[] directions) = parse_input(input_reader, false, pretty);
+
+            List<Bitmap> frames = null;
+
+            if (main.options.Contains("gif"))
+            {
+                frames = new List<Bitmap>();
+                frames.Add(create_bitmap(cells));
+            }
 
             if (pretty)
             {
@@ -271,6 +297,11 @@ namespace advent_of_code_2024.days
                 {
                     cells.display(cell => display_cell(cell));
                 }
+
+                if (main.options.Contains("gif"))
+                {
+                    frames.Add(create_bitmap(cells));
+                }
             }
 
             if (!pretty)
@@ -280,7 +311,14 @@ namespace advent_of_code_2024.days
 
             if (main.options.Contains("bmp"))
             {
-                create_bitmap(cells, "day_15_part_1.bmp");
+                Bitmap bitmap = create_bitmap(cells);
+
+                save_bitmap(bitmap, "day_15_part_1.bmp");
+            }
+
+            if (main.options.Contains("gif"))
+            {
+                save_gif(frames, "day_15_part_1.gif");
             }
 
             int result = calculate_result(cells);
@@ -429,6 +467,14 @@ namespace advent_of_code_2024.days
         {
             (c_vector robot, e_cell_state[][] cells, c_vector[] directions) = parse_input(input_reader, true, pretty);
 
+            List<Bitmap> frames = null;
+
+            if (main.options.Contains("gif"))
+            {
+                frames = new List<Bitmap>();
+                frames.Add(create_bitmap(cells));
+            }
+
             if (pretty)
             {
                 Console.WriteLine("Initial state:");
@@ -478,6 +524,11 @@ namespace advent_of_code_2024.days
                 {
                     cells.display(cell => display_cell(cell));
                 }
+
+                if (main.options.Contains("gif"))
+                {
+                    frames.Add(create_bitmap(cells));
+                }
             }
 
             if (!pretty)
@@ -487,7 +538,14 @@ namespace advent_of_code_2024.days
 
             if (main.options.Contains("bmp"))
             {
-                create_bitmap(cells, "day_15_part_2.bmp");
+                Bitmap bitmap = create_bitmap(cells);
+
+                save_bitmap(bitmap, "day_15_part_2.bmp");
+            }
+
+            if (main.options.Contains("gif"))
+            {
+                save_gif(frames, "day_15_part_2.gif");
             }
 
             int result = calculate_result(cells);

@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Drawing.Imaging;
+using System.IO;
 
 namespace advent_of_code_common.display_helpers
 {
@@ -150,6 +149,63 @@ namespace advent_of_code_common.display_helpers
             }
 
             return bitmap;
+        }
+
+        internal static ImageCodecInfo get_encoder(
+            ImageFormat image_format)
+        {
+            ImageCodecInfo[] codecs = ImageCodecInfo.GetImageDecoders();
+            foreach (ImageCodecInfo codec in codecs)
+            {
+                if (codec.FormatID == image_format.Guid)
+                {
+                    return codec;
+                }
+            }
+
+            return null;
+        }
+
+        // Found by searching Bing for "Create animated gif in C# without 3rd party package" and AI showed me how to do this.
+
+        // ... I need to learn what this is all about.
+
+        public static MemoryStream create_gif(
+            this List<Bitmap> frames)
+        {
+            // Save the first frame.
+
+            MemoryStream stream = new MemoryStream();
+
+            EncoderParameters encoder_parameters = new EncoderParameters(1);
+            encoder_parameters.Param[0] = new EncoderParameter(
+                Encoder.SaveFlag,
+                (long)EncoderValue.MultiFrame);
+
+            ImageCodecInfo gif_codec = get_encoder(ImageFormat.Gif);
+
+            frames[0].Save(stream, gif_codec, encoder_parameters);
+
+            // Save the remaining frames.
+
+            encoder_parameters.Param[0] = new EncoderParameter(
+                Encoder.SaveFlag,
+                (long)EncoderValue.FrameDimensionTime);
+
+            for (int i = 1; i < frames.Count; i++)
+            {
+                frames[0].SaveAdd(frames[i], encoder_parameters);
+            }
+
+            // End the animation.
+
+            encoder_parameters.Param[0] = new EncoderParameter(
+                Encoder.SaveFlag,
+                (long)EncoderValue.Flush);
+
+            frames[0].SaveAdd(encoder_parameters);
+
+            return stream;
         }
     }
 }
