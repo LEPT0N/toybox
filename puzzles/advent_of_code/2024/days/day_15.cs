@@ -189,7 +189,6 @@ namespace advent_of_code_2024.days
             return result;
         }
 
-        internal static void create_bitmap(
         internal static Bitmap create_bitmap(
             e_cell_state[][] cells)
         {
