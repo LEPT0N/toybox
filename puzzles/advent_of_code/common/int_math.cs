@@ -119,6 +119,70 @@ namespace advent_of_code_common.int_math
                 && Math.Abs(y - other.y) <= 1
                 && Math.Abs(z - other.z) <= 1;
         }
+
+        public c_vector add(e_direction direction)
+        {
+            c_vector result = new c_vector(this);
+
+            switch (direction)
+            {
+                case e_direction.none:
+                    break;
+
+                case e_direction.up:
+                    result.row--;
+                    break;
+
+                case e_direction.down:
+                    result.row++;
+                    break;
+
+                case e_direction.left:
+                    result.col--;
+                    break;
+
+                case e_direction.right:
+                    result.col++;
+                    break;
+
+                default:
+                    throw new Exception($"Can't add direction '{direction}' to a vector");
+            }
+
+            return result;
+        }
+
+        public c_vector subtract(e_direction direction)
+        {
+            c_vector result = new c_vector(this);
+
+            switch (direction)
+            {
+                case e_direction.none:
+                    break;
+
+                case e_direction.up:
+                    result.row++;
+                    break;
+
+                case e_direction.down:
+                    result.row--;
+                    break;
+
+                case e_direction.left:
+                    result.col++;
+                    break;
+
+                case e_direction.right:
+                    result.col--;
+                    break;
+
+                default:
+                    throw new Exception($"Can't subtract direction '{direction}' to a vector");
+            }
+
+            return result;
+        }
     }
 
     public class c_vector_comparer : IEqualityComparer<c_vector>
@@ -533,6 +597,21 @@ namespace advent_of_code_common.int_math
                 case (e_direction.right, e_angle.angle_270): return e_direction.down;
 
                 default: throw new Exception($"Invalid rotation {direction} {angle}");
+            }
+        }
+    }
+
+    public static class extensions
+    {
+        public static char to_char(this e_direction direction)
+        {
+            switch (direction)
+            {
+                case e_direction.up: return '^';
+                case e_direction.down: return 'v';
+                case e_direction.left: return '<';
+                case e_direction.right: return '>';
+                default: return ' ';
             }
         }
     }

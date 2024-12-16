@@ -4,7 +4,7 @@ using System.Diagnostics;
 
 namespace advent_of_code_common.min_heap
 {
-    [DebuggerDisplay("count = {count}, min = {data[0]}, comparer = ({comparer})", Type = "c_min_heap")]
+    [DebuggerDisplay("count = {count}, min = {data[1]}, comparer = ({comparer})", Type = "c_min_heap")]
     public class c_min_heap<T> where T : class
     {
         private int count = 0;
