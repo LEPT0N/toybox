@@ -372,5 +372,19 @@ namespace advent_of_code_common.extensions
             return index.x >= 0 && index.x < data.GetLength(0)
                 && index.y >= 0 && index.y < data.GetLength(1);
         }
+
+        public static string common_prefix(this string a, string b)
+        {
+            string result = "";
+
+            int length = Math.Min(a.Length, b.Length);
+
+            for (int i = 0; i < length && a[i] == b[i]; i++)
+            {
+                result = result + a[i];
+            }
+
+            return result;
+        }
     }
 }
