@@ -300,7 +300,11 @@ namespace advent_of_code_2024.days
                 grid[block.row, block.col].blocked = true;
                 blocks_placed++;
 
-                compute_best_path(grid, start, end);
+                // Only need to recompute if we broke the best path.
+                if (grid[block.row, block.col].on_best_path)
+                {
+                    compute_best_path(grid, start, end);
+                }
 
                 if (pretty)
                 {
