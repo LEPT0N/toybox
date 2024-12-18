@@ -363,14 +363,34 @@ namespace advent_of_code_common.extensions
 
         public static bool is_valid_index<T>(this T[][] data, c_vector index)
         {
-            return index.x >= 0 && index.x < data.Length
-                && index.y >= 0 && index.y < data[index.x].Length;
+            return index.row >= 0 && index.row < data.Length
+                && index.col >= 0 && index.col < data[index.row].Length;
         }
 
         public static bool is_valid_index<T>(this T[,] data, c_vector index)
         {
-            return index.x >= 0 && index.x < data.GetLength(0)
-                && index.y >= 0 && index.y < data.GetLength(1);
+            return index.row >= 0 && index.row < data.GetLength(0)
+                && index.col >= 0 && index.col < data.GetLength(1);
+        }
+
+        public static T try_get_index<T>(this T[][] data, c_vector index) where T : class
+        {
+            if (data.is_valid_index(index))
+            {
+                return data[index.row][index.col];
+            }
+
+            return null;
+        }
+
+        public static T try_get_index<T> (this T[,] data, c_vector index) where T : class
+        {
+            if (data.is_valid_index(index))
+            {
+                return data[index.row, index.col];
+            }
+
+            return null;
         }
 
         public static string common_prefix(this string a, string b)
