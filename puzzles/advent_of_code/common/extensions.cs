@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 
 namespace advent_of_code_common.extensions
 {
@@ -259,9 +258,9 @@ namespace advent_of_code_common.extensions
         }
 
         // Copied from my nonogram solver
-        public static int[][] get_all_permutations(this int[] permutation)
+        public static T[][] get_all_permutations<T>(this T[] permutation) where T : IComparable
         {
-            List<int[]> permutations = new List<int[]>();
+            List<T[]> permutations = new List<T[]>();
 
             do
             {
@@ -277,7 +276,7 @@ namespace advent_of_code_common.extensions
         // Written by me after understanding this explanation of std:next_permutation:
         //      https://stackoverflow.com/questions/11483060/stdnext-permutation-implementation-explanation
         // To use this, the first permutation is in ascending order, and the last permutation is in descending order.
-        public static bool get_next_permutation(this int[] list)
+        public static bool get_next_permutation<T>(this T[] list) where T : IComparable
         {
             int first = 0;
             int last = list.Length - 1;
@@ -287,7 +286,8 @@ namespace advent_of_code_common.extensions
             // Scan from the end of the list to find the first element not in descending order.
             while (i >= first)
             {
-                if (list[i] < list[i + 1])
+
+                if (list[i].CompareTo(list[i + 1]) < 0)
                 {
                     // list[i + 1, last] is in descending order, but list[i] doesn't follow the trend.
 
@@ -295,7 +295,7 @@ namespace advent_of_code_common.extensions
                     // We're guaranteed to find something since list[i] < list[i + 1]
                     // The first one we find is what we want, since list[i + 1, last] is in descending order
                     int next_largest = last;
-                    while (list[i] >= list[next_largest])
+                    while (list[i].CompareTo(list[next_largest]) >= 0)
                     {
                         next_largest--;
                     }
@@ -315,6 +315,35 @@ namespace advent_of_code_common.extensions
 
             // The entire list is in descending order. No more permutations!
             return false;
+        }
+
+        // Given a list of groups of strings, create every combination of result strings
+        // that contain one element from each group.
+        public static List<string> get_all_combinations(this List<string[]> options, int index = 0)
+        {
+            List<string> result = new List<string>();
+
+            if (index == options.Count - 1)
+            {
+                foreach (string element in options[index])
+                {
+                    result.Add(element);
+                }
+
+                return result;
+            }
+
+            List<string> recursive_combinations = options.get_all_combinations(index + 1);
+
+            foreach (string element in options[index])
+            {
+                foreach (string recursive_combination in recursive_combinations)
+                {
+                    result.Add(element + recursive_combination);
+                }
+            }
+
+            return result;
         }
 
         public static void copy_to<T>(this T[,] source, T[,] destination,

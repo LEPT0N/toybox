@@ -183,6 +183,27 @@ namespace advent_of_code_common.int_math
 
             return result;
         }
+
+        public e_direction[] to_directions()
+        {
+            List<e_direction> directions = new List<e_direction>();
+
+            e_direction up_down_direction = row > 0 ? e_direction.down : e_direction.up;
+
+            for (int i = 0; i < int.Abs(row); i++)
+            {
+                directions.Add(up_down_direction);
+            }
+
+            e_direction left_right_direction = col > 0 ? e_direction.right : e_direction.left;
+
+            for (int i = 0; i < int.Abs(col); i++)
+            {
+                directions.Add(left_right_direction);
+            }
+
+            return directions.ToArray();
+        }
     }
 
     public class c_vector_comparer : IEqualityComparer<c_vector>

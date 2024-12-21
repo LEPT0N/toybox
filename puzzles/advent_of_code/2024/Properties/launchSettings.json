@@ -2,7 +2,7 @@
   "profiles": {
     "advent_of_code_2024": {
       "commandName": "Project",
-      "commandLineArgs": "20 2 input\\day_{day}.txt pretty png"
+      "commandLineArgs": "21 1 input\\day_{day}.txt pretty png"
     }
   }
 }
