@@ -50,102 +50,57 @@ namespace advent_of_code_2024.days
             }
 
             public Dictionary<int, int> find_cheats(
-                int part)
+                int max_cheat_distance)
             {
                 Dictionary<int, int> cheats = new Dictionary<int, int>();
 
-                if (part == 1)
+                cells.for_each(cell =>
                 {
-                    cells.for_each(cell =>
+                    if (cell.blocked)
                     {
-                        if (cell.blocked)
-                        {
-                            return;
-                        }
+                        return;
+                    }
 
-                        // Find all valid neighors we could cheat to get to.
+                    // Find all valid neighors we could cheat to get to.
 
-                        foreach (e_direction direction in k_cell_neighbors)
+                    c_vector offset = new c_vector();
+                    for (offset.row = -max_cheat_distance; offset.row <= max_cheat_distance; offset.row++)
+                    {
+                        int col_radius = max_cheat_distance - Math.Abs(offset.row);
+
+                        for (offset.col = -col_radius; offset.col <= col_radius; offset.col++)
                         {
-                            c_grid_cell neighbor = cells.try_get_index(cell.position.add(direction).add(direction));
+                            c_grid_cell neighbor = cells.try_get_index(cell.position.add(offset));
 
                             if (neighbor != null &&
                                 !neighbor.blocked)
                             {
-                                // See if it's adventageous to cheat to get there.
-                                int cheating_distance = neighbor.distance_to_end + 2;
+                                int distance_to_neighbor = cell.position.taxi_distance(neighbor.position);
 
-                                if (cheating_distance < cell.distance_to_end)
+                                if (distance_to_neighbor >= 2 &&
+                                    distance_to_neighbor <= max_cheat_distance)
                                 {
-                                    // Make note of this cheat.
+                                    // See if it's adventageous to cheat to get there.
+                                    int cheating_distance = neighbor.distance_to_end + distance_to_neighbor;
 
-                                    int distance_saved = cell.distance_to_end - cheating_distance;
-
-                                    if (!cheats.ContainsKey(distance_saved))
+                                    if (cheating_distance < cell.distance_to_end)
                                     {
-                                        cheats[distance_saved] = 0;
-                                    }
+                                        // Make note of this cheat.
 
-                                    cheats[distance_saved]++;
-                                }
-                            }
-                        }
-                    });
-                }
-                else if (part == 2)
-                {
-                    cells.for_each(cell =>
-                    {
-                        if (cell.blocked)
-                        {
-                            return;
-                        }
+                                        int distance_saved = cell.distance_to_end - cheating_distance;
 
-                        // Find all valid neighors we could cheat to get to.
-
-                        int k_max_cheat_distance = 20;
-
-                        c_vector offset = new c_vector();
-                        for (offset.row = -k_max_cheat_distance; offset.row <= k_max_cheat_distance; offset.row++)
-                        {
-                            for (offset.col = -k_max_cheat_distance; offset.col <= k_max_cheat_distance; offset.col++)
-                            {
-                                c_grid_cell neighbor = cells.try_get_index(cell.position.add(offset));
-
-                                if (neighbor != null &&
-                                    !neighbor.blocked)
-                                {
-                                    int distance_to_neighbor = cell.position.taxi_distance(neighbor.position);
-
-                                    if (distance_to_neighbor >= 2 &&
-                                        distance_to_neighbor <= k_max_cheat_distance)
-                                    {
-                                        // See if it's adventageous to cheat to get there.
-                                        int cheating_distance = neighbor.distance_to_end + distance_to_neighbor;
-
-                                        if (cheating_distance < cell.distance_to_end)
+                                        if (!cheats.ContainsKey(distance_saved))
                                         {
-                                            // Make note of this cheat.
-
-                                            int distance_saved = cell.distance_to_end - cheating_distance;
-
-                                            if (!cheats.ContainsKey(distance_saved))
-                                            {
-                                                cheats[distance_saved] = 0;
-                                            }
-
-                                            cheats[distance_saved]++;
+                                            cheats[distance_saved] = 0;
                                         }
+
+                                        cheats[distance_saved]++;
                                     }
                                 }
                             }
                         }
-                    });
-                }
-                else
-                {
-                    throw new Exception($"Invalid part '{part};");
-                }
+                    }
+                });
 
                 return cheats;
             }
@@ -154,7 +109,8 @@ namespace advent_of_code_2024.days
         internal static void part_worker(
             c_input_reader input_reader,
             bool pretty,
-            int part)
+            int part,
+            int max_cheat_distance)
         {
             c_racetrack racetrack = new c_racetrack(input_reader);
 
@@ -175,7 +131,7 @@ namespace advent_of_code_2024.days
                 racetrack.create_picture($"day_20_part_{part}");
             }
 
-            Dictionary<int, int> cheats = racetrack.find_cheats(part);
+            Dictionary<int, int> cheats = racetrack.find_cheats(max_cheat_distance);
 
             if (pretty)
             {
@@ -197,14 +153,14 @@ namespace advent_of_code_2024.days
             c_input_reader input_reader,
             bool pretty)
         {
-            part_worker(input_reader, pretty, 1);
+            part_worker(input_reader, pretty, 1, 2);
         }
 
         public static void part_2(
             c_input_reader input_reader,
             bool pretty)
         {
-            part_worker(input_reader, pretty, 2);
+            part_worker(input_reader, pretty, 2, 20);
         }
     }
 }
