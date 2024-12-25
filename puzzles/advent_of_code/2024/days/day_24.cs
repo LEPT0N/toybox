@@ -1,30 +1,29 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Xml.Linq;
 using advent_of_code_common.input_reader;
 
 namespace advent_of_code_2024.days
 {
     internal class day_24
     {
-        internal abstract class c_node(string n)
+        internal abstract class c_node(string n, string t)
         {
             public readonly string name = n;
+            public readonly string type = t;
 
             public string nickname = n;
 
             public bool? value = null;
 
-            public List<c_node> children = [];
+            public List<c_node> outputs = [];
 
             protected abstract void replace_input(string name, c_node other);
 
-            protected void add_child(c_node child)
+            protected void add_output(c_node output)
             {
-                children.Add(child);
+                outputs.Add(output);
             }
 
             protected abstract void try_compute_value();
@@ -37,9 +36,9 @@ namespace advent_of_code_2024.days
 
                     if (value.HasValue)
                     {
-                        foreach (c_node child in children)
+                        foreach (c_node output in outputs)
                         {
-                            child.try_compute();
+                            output.try_compute();
                         }
                     }
                 }
@@ -47,20 +46,20 @@ namespace advent_of_code_2024.days
 
             public void replace_with(c_node other)
             {
-                foreach (c_node child in this.children)
+                foreach (c_node output in this.outputs)
                 {
-                    child.replace_input(this.name, other);
+                    output.replace_input(this.name, other);
                 }
 
-                other.children = this.children;
-                this.children = [];
+                other.outputs = this.outputs;
+                this.outputs = [];
             }
         }
 
-        [DebuggerDisplay("{name}: {value}", Type = "c_const_node")]
-        internal class c_const_node(string n, bool v) : c_node(n)
+        [DebuggerDisplay("{type} {name}: {value}", Type = "c_const_node")]
+        internal class c_const_node(string n, bool v) : c_node(n, "const")
         {
-            private bool computed_value = v;
+            readonly private bool computed_value = v;
 
             protected override void try_compute_value()
             {
@@ -69,12 +68,12 @@ namespace advent_of_code_2024.days
 
             protected override void replace_input(string name, c_node other)
             {
-                throw new Exception("A const node should have never been a child");
+                throw new Exception("A const node should have never been a output");
             }
         }
 
-        [DebuggerDisplay("{name}: ???", Type = "c_unknown_node")]
-        internal class c_unknown_node(string n) : c_node(n)
+        [DebuggerDisplay("{type} {name}: ???", Type = "c_unknown_node")]
+        internal class c_unknown_node(string n) : c_node(n, "unknown")
         {
             protected override void try_compute_value()
             {
@@ -83,7 +82,7 @@ namespace advent_of_code_2024.days
 
             protected override void replace_input(string name, c_node other)
             {
-                throw new Exception("A const node should have never been a child");
+                throw new Exception("A const node should have never been a output");
             }
         }
 
@@ -92,13 +91,13 @@ namespace advent_of_code_2024.days
             public c_node input_a { get; private set; }
             public c_node input_b { get; private set; }
 
-            public c_two_input_node(string n, c_node a, c_node b) : base(n)
+            public c_two_input_node(string n, string t, c_node a, c_node b) : base(n, t)
             {
                 input_a = a;
-                input_a.children.Add(this);
+                input_a.outputs.Add(this);
 
                 input_b = b;
-                input_b.children.Add(this);
+                input_b.outputs.Add(this);
             }
 
             protected abstract bool compute_value(
@@ -127,8 +126,8 @@ namespace advent_of_code_2024.days
             }
         }
 
-        [DebuggerDisplay("{nickname}: [{input_a.nickname} = {input_a.value}] AND [{input_b.nickname} = {input_b.value}] = {value}", Type = "c_and_node")]
-        internal class c_and_node(string n, c_node a, c_node b) : c_two_input_node(n, a, b)
+        [DebuggerDisplay("{type} {name}/{nickname}: [{input_a.nickname} = {input_a.value}] AND [{input_b.nickname} = {input_b.value}] = {value}", Type = "c_and_node")]
+        internal class c_and_node(string n, c_node a, c_node b) : c_two_input_node(n, "AND", a, b)
         {
             protected override bool compute_value(
                 bool input_a_value,
@@ -138,8 +137,8 @@ namespace advent_of_code_2024.days
             }
         }
 
-        [DebuggerDisplay("{nickname}: [{input_a.nickname} = {input_a.value}] OR [{input_b.nickname} = {input_b.value}] = {value}", Type = "c_and_node")]
-        internal class c_or_node(string n, c_node a, c_node b) : c_two_input_node(n, a, b)
+        [DebuggerDisplay("{type} {name}/{nickname}: [{input_a.nickname} = {input_a.value}] OR [{input_b.nickname} = {input_b.value}] = {value}", Type = "c_or_node")]
+        internal class c_or_node(string n, c_node a, c_node b) : c_two_input_node(n, "OR", a, b)
         {
             protected override bool compute_value(
                 bool input_a_value,
@@ -149,8 +148,8 @@ namespace advent_of_code_2024.days
             }
         }
 
-        [DebuggerDisplay("{nickname}: [{input_a.nickname} = {input_a.value}] XOR [{input_b.nickname} = {input_b.value}] = {value}", Type = "c_and_node")]
-        internal class c_xor_node(string n, c_node a, c_node b) : c_two_input_node(n, a, b)
+        [DebuggerDisplay("{type} {name}/{nickname}: [{input_a.nickname} = {input_a.value}] XOR [{input_b.nickname} = {input_b.value}] = {value}", Type = "c_xor_node")]
+        internal class c_xor_node(string n, c_node a, c_node b) : c_two_input_node(n, "XOR", a, b)
         {
             protected override bool compute_value(
                 bool input_a_value,
@@ -161,8 +160,7 @@ namespace advent_of_code_2024.days
         }
 
         internal static c_node[] parse_input(
-            in c_input_reader input_reader,
-            in bool pretty)
+            in c_input_reader input_reader)
         {
             Dictionary<string, c_node> nodes = [];
 
@@ -204,24 +202,13 @@ namespace advent_of_code_2024.days
                     nodes[input_b_name] = input_b;
                 }
 
-                c_node node;
-                switch (inputs[1])
+                c_node node = inputs[1] switch
                 {
-                    case "AND":
-                        node = new c_and_node(node_name, input_a, input_b);
-                        break;
-
-                    case "OR":
-                        node = new c_or_node(node_name, input_a, input_b);
-                        break;
-
-                    case "XOR":
-                        node = new c_xor_node(node_name, input_a, input_b);
-                        break;
-
-                    default:
-                        throw new Exception($"Unexpected operator '{inputs[1]}'");
-                }
+                    "AND" => new c_and_node(node_name, input_a, input_b),
+                    "OR" => new c_or_node(node_name, input_a, input_b),
+                    "XOR" => new c_xor_node(node_name, input_a, input_b),
+                    _ => throw new Exception($"Unexpected operator '{inputs[1]}'"),
+                };
 
                 // If we had a previous node at this position, replace it.
                 if (nodes.TryGetValue(node_name, out c_node pre_existing_node))
@@ -246,7 +233,12 @@ namespace advent_of_code_2024.days
             c_input_reader input_reader,
             bool pretty)
         {
-            c_node[] nodes = parse_input(input_reader, pretty);
+            c_node[] nodes = parse_input(input_reader);
+
+            if (pretty)
+            {
+                Console.WriteLine("Calculating...");
+            }
 
             foreach (c_node node in nodes)
             {
@@ -260,46 +252,11 @@ namespace advent_of_code_2024.days
                 }
             }
 
-            //c_node[] z_nodes = nodes.Where(n => n.name[0] == 'z').ToArray();
-
-            //c_node[] ordered_z_nodes = z_nodes.OrderBy(n => int.Parse(n.name.Substring(1))).ToArray();
-
-            //Int64[] bits = ordered_z_nodes.Select(n => n.value.Value ? (1L << n.id.Value) : 0L).ToArray();
-
-            //Int64 result = bits.Sum();
-
             Int64 result = nodes
                 .Where(n => n.name[0] == 'z')
-                .OrderBy(n => int.Parse(n.name.Substring(1)))
+                .OrderBy(n => int.Parse(n.name[1..]))
                 .Select((n, i) => n.value.Value ? (1L << i) : 0L) // technically not correct but there are no gaps in z so it works.
                 .Sum();
-
-            // Wrong: too low: 766293566
-            //  =      2    d    a    c    b    6    3    e
-            //  =   0010 1101 1010 1100 1011 0110 0011 1110
-
-            /*
-
-            0   0000
-            1   0001
-            2   0010
-            3   0011
-            4   0100
-            5   0101
-            6   0110
-            7   0111
-            8   1000
-            9   1001
-            a   1010
-            b   1011
-            c   1100
-            d   1101
-            e   1110
-            f   1111
-
-            */
-
-            nodes[0].nickname = "DELETEME";
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine();
@@ -311,151 +268,19 @@ namespace advent_of_code_2024.days
             c_input_reader input_reader,
             bool pretty)
         {
-            c_node[] nodes = parse_input(input_reader, pretty);
+            // Build the node graph.
 
-            foreach (c_node node in nodes)
-            {
-                if (node is c_const_node)
-                {
-                    node.try_compute();
-                }
-                else if (node is c_unknown_node)
-                {
-                    throw new Exception($"An unknown node remained in the circuit: '{node.name}'");
-                }
-            }
+            c_node[] nodes = parse_input(input_reader);
 
-            List<c_node> bad_nodes = [];
+            // Find some suspicious nodes
 
-            c_node[] x_nodes = nodes
-                .Where(n => n.name[0] == 'x')
-                .OrderBy(n => int.Parse(n.name.Substring(1)))
-                .ToArray();
+            HashSet<c_node> suspicious_nodes = [];
 
-            foreach (c_node node in x_nodes)
-            {
-                if (node.children.Count != 2)
-                {
-                    Console.WriteLine($"{node.name} is wrong.");
-                    bad_nodes.Add(node);
-                }
-            }
-
-            c_node[] y_nodes = nodes
-                .Where(n => n.name[0] == 'y')
-                .OrderBy(n => int.Parse(n.name.Substring(1)))
-                .ToArray();
-
-            foreach (c_node node in y_nodes)
-            {
-                if (node.children.Count != 2)
-                {
-                    Console.WriteLine($"{node.name} is wrong.");
-                    bad_nodes.Add(node);
-                }
-            }
-
-            c_xor_node[] xy_sum_nodes = x_nodes
-                .Select(x => x.children[0] is c_xor_node ? x.children[0] : x.children[1])
-                .Select(n => (c_xor_node)n)
-                .ToArray();
-
-            for (int i = 1; i < xy_sum_nodes.Length; i++)
-            {
-                c_xor_node node = xy_sum_nodes[i];
-
-                node.nickname = $"xy{i:00}_sum";
-
-                if ((node.input_a.name != $"x{i:00}" && node.input_a.name != $"y{i:00}") ||
-                    (node.input_b.name != $"x{i:00}" && node.input_b.name != $"y{i:00}"))
-                {
-                    Console.WriteLine($"{xy_sum_nodes[i].name} is wrong.");
-                    bad_nodes.Add(node);
-                }
-            }
-
-            c_and_node[] xy_carry_nodes = x_nodes
-                .Select(x => x.children[0] is c_and_node ? x.children[0] : x.children[1])
-                .Select(n => (c_and_node)n)
-                .ToArray();
-
-            for (int i = 0; i < xy_carry_nodes.Length; i++)
-            {
-                c_and_node node = xy_carry_nodes[i];
-
-                node.nickname = $"xy{i:00}_carry";
-
-                if (i > 0)
-                {
-                    if ((node.input_a.name != $"x{i:00}" && node.input_a.name != $"y{i:00}") ||
-                        (node.input_b.name != $"x{i:00}" && node.input_b.name != $"y{i:00}"))
-                    {
-                        Console.WriteLine($"{node.name} is wrong.");
-                        bad_nodes.Add(node);
-                    }
-                }
-            }
-
-            c_or_node[] c_out_nodes = nodes
-                .Where(n => n is c_or_node)
-                .Select(n => (c_or_node)n)
-                .ToArray();
-
-            for (int i = 0; i < c_out_nodes.Length; i++)
-            {
-                c_or_node node = c_out_nodes[i];
-
-                if (!(node.input_a is c_and_node) ||
-                    !(node.input_b is c_and_node))
-                {
-                    Console.WriteLine($"{node.name} is an 'OR' node without two 'AND' inputs.");
-                    bad_nodes.Add(node);
-                }
-                else if (node.input_a.nickname.EndsWith("_carry"))
-                {
-                    int number = int.Parse(node.input_a.nickname.Substring(2, 2));
-
-                    node.nickname = $"c{number:00}_out";
-                }
-                else if (node.input_b.nickname.EndsWith("_carry"))
-                {
-                    int number = int.Parse(node.input_b.nickname.Substring(2, 2));
-
-                    node.nickname = $"c{number:00}_out";
-                }
-                else
-                {
-                    Console.WriteLine($"{node.name} is an 'OR' node that doesn't connect up one of the xy##_carry inputs.");
-                    bad_nodes.Add(node);
-                }
-            }
-
-            c_and_node[] carry_combo_nodes = nodes
-                .Where(n => n is c_and_node)
-                .Select(n => (c_and_node)n)
-                .Where(n => !xy_carry_nodes.Contains(n))
-                .ToArray();
-
-            for (int i = 0; i < carry_combo_nodes.Length; i++)
-            {
-                c_and_node node = carry_combo_nodes[i];
-
-                /*if (!c_out_nodes.Contains(node.input_a) && !c_out_nodes.Contains(node.input_b))
-                {
-                    Console.WriteLine($"{node.name} is an 'AND' node that's not hooked up to an x## and y##, but also not hooked up to a c##_out.");
-                    bad_nodes.Add(node);
-                }
-                else */
-                if (!xy_sum_nodes.Contains(node.input_a) && !xy_sum_nodes.Contains(node.input_b))
-                {
-                    Console.WriteLine($"{node.name} is an 'AND' node that's not hooked up to an x## and y##, but also not hooked up to an xy##_sum.");
-                    bad_nodes.Add(node);
-                }
-            }
+            // Find suspicious 'z' nodes.
 
             c_two_input_node[] z_nodes = nodes
                 .Where(n => n.name[0] == 'z')
-                .OrderBy(n => int.Parse(n.name.Substring(1)))
+                .OrderBy(n => int.Parse(n.name[1..]))
                 .Select(n => (c_two_input_node)n)
                 .ToArray();
 
@@ -463,58 +288,62 @@ namespace advent_of_code_2024.days
             {
                 c_two_input_node node = z_nodes[i];
 
-                if (!(node is c_xor_node))
+                if (node is not c_xor_node)
                 {
-                    Console.WriteLine($"{node.name} is an output but not a 'XOR'.");
-                    bad_nodes.Add(node);
+                    if (pretty)
+                    {
+                        Console.WriteLine($"{node.name} is an output but not a 'XOR'.");
+                    }
+                    suspicious_nodes.Add(node);
                 }
-                else if (!xy_sum_nodes.Contains(node.input_a) && !xy_sum_nodes.Contains(node.input_b))
+                else if (node.input_a is not c_xor_node && node.input_b is not c_xor_node)
                 {
-                    Console.WriteLine($"{node.name} is an output but is not hooked up to an xy##_sum.");
-                    bad_nodes.Add(node);
+                    if (pretty)
+                    {
+                        Console.WriteLine($"{node.name} is an output but doesn't have a 'XOR' as input.");
+                    }
+                    suspicious_nodes.Add(node);
                 }
-
-                //if (!(z_nodes[i] is c_xor_node) ||
-                //    (z_nodes[i].input_a.nickname != $"xy{i:00}_sum" && z_nodes[i].input_b.nickname != $"xy{i:00}_sum")
-                //    )// || (z_nodes[i].input_a.nickname != $"c{i - 1:00}_out" && z_nodes[i].input_b.nickname != $"c{i - 1:00}_out"))
-
-                ////(z_nodes[i].input_a.nickname != $"xy{i - 1:00}_carry" && z_nodes[i].input_a.nickname != $"xy{i:00}_sum") ||
-                ////(z_nodes[i].input_b.nickname != $"xy{i - 1:00}_carry" && z_nodes[i].input_b.nickname != $"xy{i:00}_sum")
-                //{
-                //    Console.WriteLine($"{z_nodes[i].name} is wrong.");
-                //}
             }
 
+            // There were a lot of ways that I was able to tell there were problems, but I couldn't figure out a way to tell which node was the problem in a group.
+            //
+            // Instead, I was able to tell there was something fishy with z05, z11, z23, and z38, so if I just look at each group and try to fill in a full adder with the node names:
+            // https://www.101computing.net/binary-additions-using-logic-gates/
+            // my drawing made it obvious where the swap was needed each time.
 
-            /*
-             *      c0 = x0 AND y0
-             *      cn = (cn-1 AND (xn XOR yn)) OR (xn AND yn)
-             * 
-             *      z0 = x0 XOR y0
-             *      z0-z44 = cn-1 XOR (xn XOR yn)
-             *      z45 = the only OR
-             *      
-             *      z05, z11, and z23 are bad.
-             *      
-             *      z38 is suspicious?
-             */
+            // 05 -> tst and z05
+            c_node node_05_x = nodes.First(n => n.name == "x05");
+            c_node node_05_y = nodes.First(n => n.name == "y05");
+            c_node node_05_z = nodes.First(n => n.name == "z05");
 
-            /*
-             * every xn and yn should combine in a XOR and an AND
-             * 
-             * 
-             */
+            // 11 -> sps and z11
+            c_node node_11_x = nodes.First(n => n.name == "x11");
+            c_node node_11_y = nodes.First(n => n.name == "y11");
+            c_node node_11_z = nodes.First(n => n.name == "z11");
 
-            string result = string.Join(",", bad_nodes
+            // 23 -> frt and z23
+            c_node node_23_x = nodes.First(n => n.name == "x23");
+            c_node node_23_y = nodes.First(n => n.name == "y23");
+            c_node node_23_z = nodes.First(n => n.name == "z23");
+
+            // 38 -> pmd and cgh
+            c_node node_38_x = nodes.First(n => n.name == "x38");
+            c_node node_38_y = nodes.First(n => n.name == "y38");
+            c_node node_38_z = nodes.First(n => n.name == "z38");
+
+            c_node node_pmd = nodes.First(n => n.name == "pmd");
+
+            // My answer therefore is: cgh,frt,pmd,sps,tst,z05,z11,z23
+
+            string result1 = string.Join(",", suspicious_nodes
                 .Select(n => n.name)
                 .Order());
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine();
-            Console.WriteLine($"Result = {result}");
+            Console.WriteLine($"Result = {result1}");
             Console.ResetColor();
-
-            // NOT correct: fsb,jkm,jkv,rdj,z05,z11,z23,z38
         }
     }
 }
