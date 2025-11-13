@@ -399,11 +399,11 @@ namespace wordle
             return score;
         }
 
-        public void write_clues(string title)
+        public void write_clues(string title, int count)
         {
             Console.WriteLine(title);
 
-            foreach (string word in m_words.OrderByDescending(x => score_word(x)).Take(5))
+            foreach (string word in m_words.OrderByDescending(x => score_word(x)).Take(count))
             {
                 Console.WriteLine("    {0} [{1}]", word, score_word(word));
             }
@@ -547,8 +547,15 @@ namespace wordle
 
         public void apply(c_guess guess)
         {
-            m_answers = m_answers.Where(word => guess.matches(word)).ToList();
-        }
+			List<string> answers = m_answers.Where(word => guess.matches(word)).ToList();
+
+			if (answers.Count == 0)
+			{
+				throw new Exception("Applying guess results in no possible answers");
+			}
+
+			m_answers = answers;
+		}
 
         public void print_solution()
 		{
@@ -643,9 +650,9 @@ namespace wordle
             Console.WriteLine("Time taken = {0}", stopwatch.Elapsed);
 		}
 
-        public void print_suggestions()
+        public void print_suggestions(int count)
 		{
-            foreach (c_hint hint in m_hints.OrderBy(hint => hint.m_score, new c_hint_comparer()).Take(5))
+            foreach (c_hint hint in m_hints.OrderBy(hint => hint.m_score, new c_hint_comparer()).Take(count))
             {
                 Console.WriteLine("    {0} [{1}, {2}, {3}]",
                     hint.m_hint,
@@ -663,8 +670,8 @@ namespace wordle
 
     internal interface i_bot
     {
-        public bool solved();
-        public void print_suggestions();
+        public int possible_solutions();
+        public void print_suggestions(int count);
         public string get_solution();
         public void print_solution();
         public void apply(c_guess guess);
@@ -680,22 +687,22 @@ namespace wordle
             m_possible_answers = new c_dictionary(answers_input_file);
         }
 
-        public bool solved()
+        public int possible_solutions()
         {
-            return m_possible_answers.word_count <= 1;
+            return m_possible_answers.word_count;
         }
 
-        public void print_suggestions()
+        public void print_suggestions(int count)
 		{
             Console.WriteLine("Dictionary Size = {0}", m_possible_answers.word_count);
-            m_possible_answers.write_clues("Some Possibilities:");
+            m_possible_answers.write_clues("Some Possibilities:", count);
 
             Console.WriteLine();
 		}
 
         public void print_solution()
 		{
-            m_possible_answers.write_clues("Solution:");
+            m_possible_answers.write_clues("Solution:", 1);
         }
 
         public string get_solution()
@@ -705,8 +712,15 @@ namespace wordle
 
         public void apply(c_guess guess)
         {
-            m_possible_answers = m_possible_answers.apply(guess);
-        }
+			c_dictionary possible_answers = m_possible_answers.apply(guess);
+
+            if (possible_answers.word_count == 0)
+            {
+                throw new Exception("Applying guess results in no possible answers");
+			}
+
+            m_possible_answers = possible_answers;
+		}
 
         public string get_best_guess()
         {
@@ -736,17 +750,17 @@ namespace wordle
             // m_hints.score_hints(m_answers);
 		}
 
-        public bool solved()
+        public int possible_solutions()
 		{
-            return m_answers.count() <= 1;
+            return m_answers.count();
 		}
 
-        public void print_suggestions()
+        public void print_suggestions(int count)
 		{
             Console.WriteLine("Dictionary Size = {0}", m_answers.count());
             Console.WriteLine("Some Possibilities:");
 
-            m_hints.print_suggestions();
+            m_hints.print_suggestions(count);
 
             Console.WriteLine();
 		}
@@ -781,18 +795,19 @@ namespace wordle
     internal class wordle
     {
         public static int k_word_length = 5;
+		public static int k_default_suggestion_count = 5;
 
-        private static string[] solve(i_bot bot, string answer, bool verbose)
+		private static string[] solve(i_bot bot, string answer, bool verbose)
 		{
             List<string> guesses = new List<string>();
 
             c_guess guess = null;
 
-            while(!bot.solved())
+            while(bot.possible_solutions() > 1)
             {
                 if (verbose)
                 {
-                    bot.print_suggestions();
+                    bot.print_suggestions(k_default_suggestion_count);
                 }
 
                 guess = null;
@@ -800,7 +815,9 @@ namespace wordle
                 if (answer != null)
                 {
                     guess = new c_guess(bot.get_best_guess(), answer);
-                }
+
+					bot.apply(guess);
+				}
 
                 while (guess == null)
                 {
@@ -809,12 +826,26 @@ namespace wordle
                     try
                     {
                         string guess_input = Console.ReadLine();
-                        guess = new c_guess(guess_input);
-                    }
-                    catch (Exception)
+
+                        if (guess_input.Substring(0, 5) == "show ")
+                        {
+                            int show_count = int.Parse(guess_input.Substring(5));
+
+							bot.print_suggestions(show_count);
+						}
+                        else
+                        {
+                            guess = new c_guess(guess_input);
+
+                            bot.apply(guess); // TODO NOCHECKIN make the 'accept/reject the input' logic bot-implementation-agnostic?
+
+                            // BETTER: return FALSE if unable to apply the hint!
+                        }
+					}
+                    catch (Exception e)
                     {
                         Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine("    Error - unable to parse input");
+                        Console.WriteLine("    Error - unable to accept input: {0}", e.Message);
                         Console.ResetColor();
                     }
                 }
@@ -822,10 +853,13 @@ namespace wordle
                 guesses.Add(guess.to_string());
 
                 guess.write_line(verbose);
-
-                bot.apply(guess);
             }
             
+            if (bot.possible_solutions() == 0)
+            {
+                // throw I guess?
+            }
+
             if (!guess.is_solution())
             {
                 guesses.Add(bot.get_solution());
@@ -917,3 +951,69 @@ namespace wordle
         }
     }
 }
+
+
+// https://old.reddit.com/r/wordle/comments/s88iq4/a_wordle_bot_leaderboard/
+// https://freshman.dev/wordle/#/leaderboard
+// https://sonorouschocolate.com/notes/index.php?title=The_best_strategies_for_Wordle
+
+/*
+ * example of getting down to 2 and never choosing one of the two:
+ * 
+ * raise = b y b b y
+ *      69 words remaining
+ * tepal = y g b g g
+ *      2 words remaining
+ * abaft = y b b b y
+ * metal = g g g g g
+ * 
+ * */
+
+/*
+ * 
+ * C:\Users\DanMi\Documents\toybox\wordle>.\bin\Release\net5.0\wordle.exe .\valid_answers.txt
+W O R D L E
+
+Dictionary Size = 2315
+Some Possibilities:
+    alert [4559]
+    alter [4559]
+    later [4559]
+    arose [4534]
+    irate [4511]
+
+
+Input guess and result: adieu = y b b b y
+[ a d i e u ]
+Dictionary Size = 37
+Some Possibilities:
+    ultra [117]
+    lunar [112]
+    quart [112]
+    tubal [111]
+    gaunt [110]
+
+
+Input guess and result: saucy = b g g b b
+[ s a u c y ]
+Dictionary Size = 9
+Some Possibilities:
+    gaunt [35]
+    haunt [35]
+    vaunt [35]
+    jaunt [34]
+    taunt [33]
+
+
+Input guess and result: human = b g b y b
+[ h u m a n ]
+Unhandled exception. System.InvalidOperationException: Sequence contains no elements
+   at System.Linq.ThrowHelper.ThrowNoElementsException()
+   at System.Linq.Enumerable.First[TSource](IEnumerable`1 source)
+   at wordle.c_dictionary.get_solution() in C:\Users\DanMi\Documents\toybox\wordle\wordle.cs:line 428
+   at wordle.c_bot_1.get_solution() in C:\Users\DanMi\Documents\toybox\wordle\wordle.cs:line 703
+   at wordle.wordle.solve(i_bot bot, String answer, Boolean verbose) in C:\Users\DanMi\Documents\toybox\wordle\wordle.cs:line 831
+   at wordle.wordle.Main(String[] args) in C:\Users\DanMi\Documents\toybox\wordle\wordle.cs:line 916
+PS C:\Users\DanMi\Documents\toybox\wordle>
+
+*/
