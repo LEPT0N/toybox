@@ -192,8 +192,14 @@ namespace digits
 
 		static void Main(string[] args)
 		{
-			int target = 483;
-			int[] inputs = { 5, 7, 11, 13, 20, 23 };
+			//int target = 483;
+			//int[] inputs = { 5, 7, 11, 13, 20, 23 };
+
+			//int target = 105875;
+			//int[] inputs = { 2, 7, 13, 19, 21, 27, 31, 41 };
+
+			int target = 443;
+			int[] inputs = { 5, 9, 11, 13, 20, 23 };
 
 			Stopwatch stopwatch = new Stopwatch();
 			stopwatch.Start();
