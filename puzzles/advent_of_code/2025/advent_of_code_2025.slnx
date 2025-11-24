@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="../common/advent_of_code_common.csproj" />
+  <Project Path="advent_of_code_2025.csproj" />
+</Solution>
