@@ -211,22 +211,22 @@ namespace advent_of_code_common.extensions
 
         public static Int64 sum(this Int64[] array)
         {
-            return array.Aggregate((a, b) => a + b);
+            return array.Aggregate(0L, (a, b) => a + b);
         }
 
         public static Int64 sum(this IEnumerable<Int64> array)
         {
-            return array.Aggregate((a, b) => a + b);
+            return array.Aggregate(0L, (a, b) => a + b);
         }
 
         public static UInt64 sum(this UInt64[] array)
         {
-            return array.Aggregate((a, b) => a + b);
+            return array.Aggregate(0UL, (a, b) => a + b);
         }
 
         public static UInt64 sum(this IEnumerable<UInt64> array)
         {
-            return array.Aggregate((a, b) => a + b);
+            return array.Aggregate(0UL, (a, b) => a + b);
         }
 
         public static void swap_elements<T>(this T[] list, int i, int j)
@@ -434,6 +434,20 @@ namespace advent_of_code_common.extensions
             }
 
             return result;
+        }
+
+        public static UInt64 count_digits(this UInt64 x)
+        {
+            UInt64 digits = 1;
+            UInt64 pow = 10;
+
+            while (x >= pow)
+            {
+                digits++;
+                pow *= 10;
+            }
+
+            return digits;
         }
     }
 }
