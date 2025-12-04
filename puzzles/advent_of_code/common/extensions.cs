@@ -162,6 +162,24 @@ namespace advent_of_code_common.extensions
             }
         }
 
+        public static int count<T>(this T[][] array, Func<T, bool> predicate)
+        {
+            int sum = 0;
+
+            for (int i = 0; i < array.Length; i++)
+            {
+                for (int j = 0; j < array[i].Length; j++)
+                {
+                    if (predicate(array[i][j]))
+                    {
+                        sum++;
+                    }
+                }
+            }
+
+            return sum;
+        }
+
         public static int count<T>(this T[,] array, Func<T, bool> predicate)
         {
             int sum = 0;
