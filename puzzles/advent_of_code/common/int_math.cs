@@ -74,6 +74,11 @@ namespace advent_of_code_common.int_math
             return taxi_distance(new c_vector());
         }
 
+        public double euclidean_magnitude()
+        {
+            return Math.Sqrt(x * x + y * y + z * z);
+        }
+
         public c_vector add(c_vector other)
         {
             return new c_vector(

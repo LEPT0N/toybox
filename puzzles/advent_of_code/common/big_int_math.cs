@@ -71,12 +71,25 @@ namespace advent_of_code_common.big_int_math
             return taxi_distance(new c_big_vector());
         }
 
+        public double euclidean_magnitude()
+        {
+            return Math.Sqrt(x * x + y * y + z * z);
+        }
+
         public c_big_vector add(c_big_vector other)
         {
             return new c_big_vector(
                 x + other.x,
                 y + other.y,
                 z + other.z);
+        }
+
+        public c_big_vector subtract(c_big_vector other)
+        {
+            return new c_big_vector(
+                x - other.x,
+                y - other.y,
+                z - other.z);
         }
 
         public c_big_vector scale(Int64 value)
