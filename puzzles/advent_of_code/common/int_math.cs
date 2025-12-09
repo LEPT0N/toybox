@@ -74,6 +74,14 @@ namespace advent_of_code_common.int_math
             return taxi_distance(new c_vector());
         }
 
+        public int taxi_area(
+            c_vector other)
+        {
+            return (Math.Abs(x - other.x) + 1)
+                * (Math.Abs(y - other.y) + 1)
+                * (Math.Abs(z - other.z) + 1);
+        }
+
         public double euclidean_magnitude()
         {
             return Math.Sqrt(x * x + y * y + z * z);
@@ -309,6 +317,16 @@ namespace advent_of_code_common.int_math
                 && max.z >= v.z;
         }
 
+        public bool strictly_contains(c_vector v)
+        {
+            return min.x < v.x
+                && max.x > v.x
+                && min.y < v.y
+                && max.y > v.y
+                && min.z < v.z
+                && max.z > v.z;
+        }
+
         public bool intersects(c_rectangle other)
         {
             return min.x <= other.max.x
@@ -317,6 +335,16 @@ namespace advent_of_code_common.int_math
                 && max.y >= other.min.y
                 && min.z <= other.max.z
                 && max.z >= other.min.z;
+        }
+
+        public bool strictly_intersects(c_rectangle other)
+        {
+            return min.x < other.max.x
+                && max.x > other.min.x
+                && min.y < other.max.y
+                && max.y > other.min.y
+                && min.z < other.max.z
+                && max.z > other.min.z;
         }
 
         public c_rectangle get_intersection(c_rectangle other)

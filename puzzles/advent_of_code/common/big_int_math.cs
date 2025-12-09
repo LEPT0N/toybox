@@ -71,6 +71,14 @@ namespace advent_of_code_common.big_int_math
             return taxi_distance(new c_big_vector());
         }
 
+        public Int64 taxi_area(
+            c_big_vector other)
+        {
+            return (Math.Abs(x - other.x) + 1)
+                * (Math.Abs(y - other.y) + 1)
+                * (Math.Abs(z - other.z) + 1);
+        }
+
         public double euclidean_magnitude()
         {
             return Math.Sqrt(x * x + y * y + z * z);
