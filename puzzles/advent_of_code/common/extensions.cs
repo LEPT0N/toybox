@@ -275,6 +275,24 @@ namespace advent_of_code_common.extensions
             return result;
         }
 
+        public static bool compare_all_elements<T>(this T[] a, T[] b, Func<T, T, bool> predicate)
+        {
+            if (a.Length != b.Length)
+            {
+                throw new ArgumentException("compare_all_elements is only allowed on two same-sized arrays");
+            }
+
+            for (int i = 0; i < a.Length; i++)
+            {
+                if (!predicate(a[i], b[i]))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         // Copied from my nonogram solver
         public static T[][] get_all_permutations<T>(this T[] permutation) where T : IComparable
         {

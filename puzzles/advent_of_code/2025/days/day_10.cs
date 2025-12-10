@@ -1,4 +1,5 @@
-﻿using advent_of_code_common.input_reader;
+﻿using advent_of_code_common.extensions;
+using advent_of_code_common.input_reader;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -39,6 +40,14 @@ namespace advent_of_code_2025.days
 
                 return state_index;
             }
+
+            public void add_joltages(ref int[] joltages)
+            {
+                foreach (int toggle in toggles)
+                {
+                    joltages[toggle]++;
+                }
+            }
         }
 
         [DebuggerDisplay("{DebuggerDisplay,nq}", Type = "c_machine")]
@@ -46,18 +55,23 @@ namespace advent_of_code_2025.days
         {
             private bool[] final_state_lights;
             private c_button[] buttons;
+            private int[] final_state_joltages;
 
             public string DebuggerDisplay
             {
                 get { return "["
                         + string.Concat(final_state_lights.Select(l => l ? "#" : "."))
                         + "] "
-                        + string.Join(' ', buttons.Select(b => b.DebuggerDisplay)); }
+                        + string.Join(' ', buttons.Select(b => b.DebuggerDisplay))
+                        + " / {"
+                        + string.Join(',', final_state_joltages)
+                        + "}"; }
             }
 
             public c_machine(
                 string input_lights,
-                string input_buttons)
+                string input_buttons,
+                string input_joltages)
             {
                 final_state_lights = input_lights
                     .Select(i => (i == '#'))
@@ -66,6 +80,11 @@ namespace advent_of_code_2025.days
                 buttons = input_buttons
                     .Split(' ')
                     .Select(i => new c_button(i))
+                    .ToArray();
+
+                final_state_joltages = input_joltages
+                    .Split(',')
+                    .Select(i => int.Parse(i))
                     .ToArray();
             }
 
@@ -198,6 +217,98 @@ namespace advent_of_code_2025.days
 
                 return machine_state_list[0].get_distance_to_final_state();
             }
+
+            private int derp(
+                int button_index,
+                int[] joltages,
+                Dictionary<(int, int[]), int> cache)
+            {
+                if (cache.TryGetValue((button_index, joltages), out int result))
+                {
+                    return result;
+                }
+
+                int current_button_presses = 0;
+                int[] current_joltages = joltages.copy();
+
+                int best_button_presses = int.MaxValue;
+
+                do
+                {
+                    // If we hit our mark, that is the lowest possible button presses for this subtree, so return it.
+
+                    if (Enumerable.SequenceEqual(final_state_joltages, current_joltages))
+                    {
+                        cache[(button_index, joltages.copy())] = current_button_presses;
+
+                        return current_button_presses;
+                    }
+
+                    // Check if recursing finds any matches.
+
+                    if (button_index + 1 < buttons.Length)
+                    {
+                        int recursive_button_presses = derp(button_index + 1, current_joltages, cache);
+
+                        // If it did, and it's better than our best found so far, then remember it.
+
+                        if (recursive_button_presses != int.MaxValue)
+                        {
+                            int total_button_presses = current_button_presses + recursive_button_presses;
+
+                            if (best_button_presses > total_button_presses)
+                            {
+                                best_button_presses = total_button_presses;
+                            }
+                        }
+                    }
+
+                    // Press the button again
+
+                    buttons[button_index].add_joltages(ref current_joltages);
+
+                    current_button_presses++;
+
+                } while (current_joltages.compare_all_elements(final_state_joltages, (x, y) => x <= y));
+
+                // Return the best that we've found.
+
+                cache[(button_index, joltages.copy())] = best_button_presses;
+
+                return best_button_presses;
+            }
+
+            public class c_joltage_comparer : IEqualityComparer<(int, int[])>
+            {
+                public bool Equals((int, int[]) a, (int, int[]) b)
+                {
+                    return a.Item1 == b.Item1 &&
+                        a.Item2.compare_all_elements(b.Item2, (x, y) => x == y);
+                }
+
+                public int GetHashCode((int, int[]) a)
+                {
+                    HashCode hash = new HashCode();
+
+                    hash.Add(a.Item1);
+
+                    a.Item2.for_each(x => hash.Add(x));
+
+                    return hash.ToHashCode();
+                }
+            }
+
+            public int fewest_buttons_to_target_joltages()
+            {
+                return derp(0, new int[final_state_joltages.Length], new Dictionary<(int, int[]), int>(new c_joltage_comparer()));
+            }
+
+            public Int128 derp()
+            {
+                Int128 state_count = final_state_joltages.Select(x => x + (Int128)1).Aggregate((Int128)1, (x, y) => x * y);
+
+                return state_count;
+            }
         }
 
         static Regex k_input_line_pattern = new Regex(@"^\[(.+)\]\s(.+)\s\{(.+)\}$");
@@ -218,7 +329,7 @@ namespace advent_of_code_2025.days
                 string input_buttons = input_line_match.Groups[2].Value;
                 string input_joltages = input_line_match.Groups[3].Value;
 
-                machines.Add(new c_machine(input_lights, input_buttons));
+                machines.Add(new c_machine(input_lights, input_buttons, input_joltages));
             }
 
             return machines.ToArray();
@@ -242,11 +353,41 @@ namespace advent_of_code_2025.days
             c_input_reader input_reader,
             bool pretty)
         {
-            // parse_input(input_reader, pretty);
+            c_machine[] machines = parse_input(input_reader, pretty);
+
+            int result = machines.Select(m => m.fewest_buttons_to_target_joltages()).Sum();
+
+            Int128[] state_counts = machines.Select(m => m.derp()).ToArray();
+
+            //Int128 total_state_count = state_counts.Sum();
+
+            //Int128 max_state_count = state_counts.Max();
+
+            // There are too many states. use 'least common multiple'?
+            // for each light, figure out ... all combos of buttons that will get us there?
+
+            // is it a system of linear equations?
+
+            /*  (3) (1,3) (2) (2,3) (0,2) (0,1) {3,5,4,7}
+             *   a   b     c   d     e     f
+             *  
+             *  ?e + ?f = 3
+             *  ?b + ?f = 5
+             *  ?c + ?d + ?e = 4
+             *  ?a + ?b + ?d = 7
+             * 
+             * not enough to solve, but given that they're integers I could just try them all.
+             *  then use memoization as I recursively test options.
+             * 
+             *  is that enough?
+             *  
+             *  lol no. still too slow (but passes example input!) oh well.
+             * 
+             */
 
             Console.ForegroundColor = ConsoleColor.Green;
             Console.WriteLine();
-            Console.WriteLine($"Result = {0}");
+            Console.WriteLine($"Result = {result}");
             Console.ResetColor();
         }
     }
